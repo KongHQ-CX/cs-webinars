@@ -344,6 +344,27 @@ button:focus-visible,
   border-color: var(--lime);
 }
 
+.filters__select {
+  appearance: none;
+  -webkit-appearance: none;
+  accent-color: var(--lime);
+  padding-right: 2.4rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a69f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 0.85rem;
+}
+
+.filters__select option {
+  background-color: var(--surface-raised);
+  color: var(--white);
+}
+
+.filters__select option:checked {
+  background-color: var(--lime-dim);
+  color: var(--lime);
+}
+
 .filters__row {
   display: flex;
   flex-wrap: wrap;
