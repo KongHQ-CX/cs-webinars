@@ -1,5 +1,6 @@
 {% macro webinar_card(page, link_title=true) %}
 <article class="card">
+  <span class="badge">Webinar</span>
   <div class="card__date">{{ page.date | date(format="%B %Y") }}</div>
   <h2 class="card__title">
     {% if link_title %}<a href="{{ page.permalink }}">{{ page.title }}</a>{% else %}{{ page.title }}{% endif %}

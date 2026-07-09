@@ -11,10 +11,14 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a href="{{ get_url(path="/") }}" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none;">
+      <a href="{{ get_url(path="/") }}" class="site-header__brand">
         <img class="site-header__logomark" src="{{ get_url(path="brand/Kong-Logomark.svg") }}" alt="">
         <span class="site-header__wordmark">Kong CS Webinars</span>
       </a>
+      <nav class="site-header__links">
+        <a href="https://konghq.com" target="_blank" rel="noopener">kong.com &#8599;</a>
+        <a href="https://developer.konghq.com" target="_blank" rel="noopener">Docs &#8599;</a>
+      </nav>
     </div>
   </header>
 
@@ -24,7 +28,7 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      Copyright &copy; 2026 <a href="https://konghq.com">Kong, Inc.</a>
+      Copyright &copy; 2026 <a href="https://konghq.com">Kong, Inc.</a> &middot; <a href="https://developer.konghq.com">Docs</a>
     </div>
   </footer>
 </body>
