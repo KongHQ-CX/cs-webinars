@@ -3,7 +3,8 @@
 // All cards render into one page, so filtering is just showing and hiding
 // them. Three independent dimensions, combined with AND:
 //   - search: substring match over each card's visible text
-//   - products: OR across the selected product chips (none selected = all)
+//   - tags: OR across the selected tag chips (none selected = all). Tags are a
+//     single pool mixing products (Konnect, Gateway…) with themes (Security…).
 //   - year: exact match on the card's year (empty = all)
 //
 // The filter bar ships with a `hidden` attribute and is revealed here, so a
@@ -20,26 +21,26 @@
   var cards = Array.prototype.slice.call(grid.querySelectorAll(".card"));
   var searchInput = root.querySelector("[data-filter-search]");
   var yearSelect = root.querySelector("[data-filter-year]");
-  var productButtons = Array.prototype.slice.call(
-    root.querySelectorAll("[data-filter-product]")
+  var tagButtons = Array.prototype.slice.call(
+    root.querySelectorAll("[data-filter-tag]")
   );
   var statusEl = root.querySelector("[data-filter-status]");
   var emptyEl = document.querySelector("[data-filter-empty]");
 
-  // Precompute each card's searchable text and product set once.
+  // Precompute each card's searchable text and tag set once.
   var index = cards.map(function (card) {
-    var products = (card.getAttribute("data-products") || "")
+    var tags = (card.getAttribute("data-tags") || "")
       .split(/\s+/)
       .filter(Boolean);
     return {
       card: card,
       text: (card.textContent || "").toLowerCase(),
-      products: products,
+      tags: tags,
       year: card.getAttribute("data-year") || "",
     };
   });
 
-  var state = { search: "", products: [], year: "" };
+  var state = { search: "", tags: [], year: "" };
 
   // Called on the first user interaction; stops cards re-running their entry
   // animation each time they are re-shown.
@@ -54,9 +55,9 @@
     if (state.year && entry.year !== state.year) {
       return false;
     }
-    if (state.products.length) {
-      var hit = state.products.some(function (p) {
-        return entry.products.indexOf(p) !== -1;
+    if (state.tags.length) {
+      var hit = state.tags.some(function (t) {
+        return entry.tags.indexOf(t) !== -1;
       });
       if (!hit) {
         return false;
@@ -81,8 +82,7 @@
 
     if (statusEl) {
       var total = index.length;
-      var filtered =
-        state.search || state.year || state.products.length;
+      var filtered = state.search || state.year || state.tags.length;
       statusEl.textContent = filtered
         ? "Showing " + visible + " of " + total
         : "";
@@ -105,30 +105,30 @@
     });
   }
 
-  productButtons.forEach(function (btn) {
+  tagButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       markFiltering();
-      var value = btn.getAttribute("data-filter-product");
+      var value = btn.getAttribute("data-filter-tag");
 
       if (value === "") {
-        // "All" clears every product selection.
-        state.products = [];
+        // "All" clears every tag selection.
+        state.tags = [];
       } else {
-        var i = state.products.indexOf(value);
+        var i = state.tags.indexOf(value);
         if (i === -1) {
-          state.products.push(value);
+          state.tags.push(value);
         } else {
-          state.products.splice(i, 1);
+          state.tags.splice(i, 1);
         }
       }
 
       // Reflect state on the chips: "All" is active only when nothing else is.
-      productButtons.forEach(function (b) {
-        var v = b.getAttribute("data-filter-product");
+      tagButtons.forEach(function (b) {
+        var v = b.getAttribute("data-filter-tag");
         var active =
           v === ""
-            ? state.products.length === 0
-            : state.products.indexOf(v) !== -1;
+            ? state.tags.length === 0
+            : state.tags.indexOf(v) !== -1;
         b.classList.toggle("chip--active", active);
         b.setAttribute("aria-pressed", active ? "true" : "false");
       });
