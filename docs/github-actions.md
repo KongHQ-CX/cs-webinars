@@ -4,7 +4,7 @@ Two workflows run on every merge to `main`.
 
 ## Deploy docs (`.github/workflows/docs.yml`)
 
-Triggers on any push to `main` that touches `docs/**`. Installs mkdocs and the plugins pinned in `docs/mkdocs/requirements.txt`, builds the site with `mkdocs build --strict`, and deploys the result to GitHub Pages.
+Triggers on any push to `main` that touches `docs/**`. Before building, it scans every file in `docs/mkdocs/docs/webinars/` and replaces any `{{ RELEASE_ZIP }}` placeholder with that page's release download URL, computed from the page's own filename (the same slug used for the release tag and the zip name). Then it installs mkdocs and the plugins pinned in `docs/mkdocs/requirements.txt`, builds the site with `mkdocs build --strict`, and deploys the result to GitHub Pages.
 
 ## Release webinar assets (`.github/workflows/release-webinar.yml`)
 
