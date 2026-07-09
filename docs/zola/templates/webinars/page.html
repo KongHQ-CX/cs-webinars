@@ -5,7 +5,7 @@
 {% block description %}{{ page.content | striptags | truncate(length=160) }}{% endblock description %}
 
 {% block content %}
-<div class="wrap single">
+<div class="wrap single crop-marks">
   <a class="back-link" href="{{ get_url(path="webinars/") }}">&larr; All webinars</a>
   {{ macros::webinar_card(page=page, link_title=false) }}
 </div>

@@ -103,7 +103,15 @@ button:focus-visible,
 .site-header .wrap {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
 }
 
 .site-header__logomark {
@@ -117,6 +125,21 @@ button:focus-visible,
   font-size: 1rem;
   letter-spacing: 0.01em;
   text-decoration: none;
+}
+
+.site-header__links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.site-header__links a {
+  color: var(--bay);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.site-header__links a:hover {
+  color: var(--lime);
 }
 
 .site-footer {
@@ -254,6 +277,16 @@ button:focus-visible,
   text-align: center;
 }
 
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lime);
+  opacity: 0.8;
+  margin: 0 0 0.75rem;
+}
+
 .section-header h1 {
   font-weight: 800;
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
@@ -315,6 +348,19 @@ button:focus-visible,
   letter-spacing: 0.02em;
   text-transform: uppercase;
   margin-bottom: 0.6rem;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--neutral-400);
+  border: 1px solid var(--neutral-700);
+  border-radius: 999px;
+  padding: 0.2em 0.7em;
+  margin-bottom: 0.75rem;
 }
 
 .card__title {
