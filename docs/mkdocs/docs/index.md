@@ -8,7 +8,8 @@ hide:
 
 Thanks for joining one of Kong's Customer Success-led webinars. This is where we post the slides, sample code, and demo assets from each session.
 
-[Browse the repo](https://github.com/KongHQ-CX/cs-webinars){ .md-button .md-button--primary }
+[Browse webinars](webinars/index.md){ .md-button .md-button--primary }
+[Browse the repo](https://github.com/KongHQ-CX/cs-webinars){ .md-button }
 
 ## Finding your session
 
