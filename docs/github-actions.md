@@ -1,6 +1,6 @@
 # What the GitHub Actions do
 
-Two workflows run on every merge to `main`.
+Three workflows run on every merge to `main`.
 
 ## Deploy docs (`.github/workflows/docs.yml`)
 
@@ -15,6 +15,10 @@ Triggers on any push to `main` that touches `webinars/**`. Diffs the push to fin
 
 If a session's folder gets edited later, merging that change re-zips and re-publishes the same release, so the download link in the docs page never has to change.
 
+## Secret scan (`.github/workflows/secret-scan.yml`)
+
+Runs on every PR into `main` and every push to `main`. It downloads a pinned version of [gitleaks](https://github.com/gitleaks/gitleaks), verifies the download against a known checksum, and scans the full commit history for anything that looks like a credential. This is a backstop, not the primary defense: check your own files for secrets before you commit, per [docs/adding-webinar-assets.md](adding-webinar-assets.md).
+
 ## Where to check if something breaks
 
-Both workflows show up under the repo's Actions tab. A failed run means the docs site or a release didn't publish. Check the job logs there first.
+All three workflows show up under the repo's Actions tab. A failed docs or release run means the site or a release didn't publish; check the job logs there first. A failed secret scan means it found something that looks like a credential. Don't merge until you've confirmed what it flagged and removed it (rewriting history if it already landed in a commit).
