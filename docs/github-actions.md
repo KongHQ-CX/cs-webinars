@@ -23,6 +23,6 @@ Gitleaks reads its config from [`.gitleaks.toml`](../.gitleaks.toml) at the repo
 
 ## Where to check if something breaks
 
-All three workflows show up under the repo's Actions tab. A failed docs or release run means the site or a release didn't publish; check the job logs there first. A failed secret scan means it found something that looks like a credential. Don't merge until you've confirmed what it flagged and removed it (rewriting history if it already landed in a commit).
+All three workflows show up under the repo's Actions tab. A failed docs or release run means the site or a release didn't publish; check the job logs there first. A failed secret scan means it found something that looks like a credential. Don't merge until you've confirmed what it flagged and either removed it (rewriting history if it already landed in a commit) or, if it's genuinely safe to publish, allowlisted it per [docs/overriding-a-safe-secret-scan.md](overriding-a-safe-secret-scan.md).
 
 PRs from forks are a special case: GitHub holds their workflow runs in an `action_required` state until a maintainer approves them from the Actions tab, so a fork PR with no visible checks usually just means nobody's approved the run yet, not that the workflows didn't apply.
