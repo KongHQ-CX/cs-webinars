@@ -8,3 +8,8 @@ generate_feeds = false
 
 [extra]
 repo_slug = "KongHQ-CX/cs-webinars"
+# Canonical product list, in display order. The webinars page renders a filter
+# chip for each product that at least one session is tagged with, so adding a
+# product here is harmless until a webinar uses it. A page opts in via
+# `products = [...]` under its own `[extra]` (see docs/adding-webinar-assets.md).
+products = ["Konnect", "Gateway", "Mesh", "AI Gateway", "Insomnia"]
