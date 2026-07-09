@@ -1,0 +1,105 @@
+# Helm values — Lab 2: HashiCorp Vault (HCV) backend.
+# Builds on Lab 1 (HTTPS-only, TLS 1.2+). Requires Secret 'kong-vault-approle'
+# created by 02-vault-init.sh.
+#
+# `env.*` keys become KONG_* automatically (env.vault_hcv_protocol → KONG_VAULT_HCV_PROTOCOL).
+# The AppRole role_id/secret_id come from a Secret via `customEnv`, so they never
+# appear in this file or as plaintext container args.
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.15"
+
+replicaCount: 2
+
+podLabels:
+  app: kong-dp
+  lab: "02-vault"
+
+admin:
+  enabled: false
+
+manager:
+  enabled: false
+
+env:
+  role: data_plane
+  database: "off"
+  konnect_mode: "on"
+  vitals: "off"
+
+  # ----- Hybrid mode -----
+  cluster_control_plane: "76a3d6a237.in.cp.konghq.com:443"
+  cluster_server_name: "76a3d6a237.in.cp.konghq.com"
+  cluster_telemetry_endpoint: "76a3d6a237.in.tp.konghq.com:443"
+  cluster_telemetry_server_name: "76a3d6a237.in.tp.konghq.com"
+  cluster_mtls: pki
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  lua_ssl_trusted_certificate: system
+
+  # ----- Lab 1 carry-forward: HTTPS-only proxy, TLS 1.2+ -----
+  ssl_cert: /etc/secrets/kong-proxy-tls/tls.crt
+  ssl_cert_key: /etc/secrets/kong-proxy-tls/tls.key
+  ssl_protocols: "TLSv1.2 TLSv1.3"
+  ssl_ciphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
+  ssl_prefer_server_ciphers: "on"
+
+  # ----- Lab 2: HashiCorp Vault (HCV) backend -----
+  # Protocol and address of the Vault server reachable from the DP pod.
+  # HTTPS end to end, same TLS discipline as the Kong proxy in Lab 1 — the
+  # Vault server cert is signed by the lab CA (kong-labs-ca-issuer), and
+  # lua_ssl_trusted_certificate: system below only trusts the OS bundle, so
+  # the lab CA is trusted explicitly via vault_hcv_tls_server_name +
+  # the CA bundle mounted from Secret 'kong-labs-ca' (see secretVolumes).
+  vault_hcv_protocol: "https"
+  vault_hcv_host: "vault.vault.svc"
+  vault_hcv_port: "8200"
+  vault_hcv_mount: "kv"
+  vault_hcv_kv: "v2"
+  vault_hcv_auth_method: approle
+  vault_hcv_tls_verify: "true"
+  vault_hcv_tls_server_name: "vault.vault.svc"
+  vault_hcv_tls_ca_cert: /etc/secrets/kong-labs-ca/ca.crt
+  # TTL for cached vault lookups.
+  vault_hcv_ttl: "300"
+
+  kong_debug: "true"
+  proxy_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+
+# AppRole auth — credentials come from a K8s Secret (never plaintext in this file).
+customEnv:
+  KONG_VAULT_HCV_APPROLE_ROLE_ID:
+    valueFrom:
+      secretKeyRef:
+        name: kong-vault-approle
+        key: role_id
+  KONG_VAULT_HCV_APPROLE_SECRET_ID:
+    valueFrom:
+      secretKeyRef:
+        name: kong-vault-approle
+        key: secret_id
+
+secretVolumes:
+  - kong-cluster-cert
+  - kong-proxy-tls
+  - kong-labs-ca
+
+proxy:
+  enabled: true
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  labels:
+    app: kong-dp
+  http:
+    enabled: false
+  tls:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+    parameters:
+      - http2
+
+ingressController:
+  enabled: false

@@ -1,0 +1,34 @@
+# TLS leaf certificate for Kong proxy HTTPS termination.
+# cert-manager writes the signed cert + key into Secret 'kong-proxy-tls'
+# which is mounted by the DataPlane proxy for HTTPS termination.
+#
+# SANs — update dns[0] to match your actual domain or GKE LB hostname.
+# For IP-based access, add the LB IP to ipAddresses[].
+#
+# Apply after: tls/self-signed-issuer.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kong-proxy-tls
+  namespace: kong
+spec:
+  secretName: kong-proxy-tls
+  commonName: api.kong-air.example.com
+  dnsNames:
+    - api.kong-air.example.com
+    # Add additional SANs as needed:
+    # - "*.kong-air.example.com"
+  duration: 2160h     # 90 days
+  renewBefore: 360h   # renew 15 days before expiry
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: kong-labs-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

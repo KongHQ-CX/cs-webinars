@@ -1,0 +1,61 @@
+# Helm values for Kong Gateway as a Konnect hybrid-mode DataPlane.
+#
+# Fully operator-free: the DataPlane is a plain `kong/kong` Helm release, the
+# Control Plane was created manually in the Konnect UI, and the DP client mTLS
+# certificate (cert/tls.cert + cert/tls.key) was generated and registered
+# against that Control Plane manually (Konnect UI → Gateway Manager →
+# Control Plane → Generate certificate). Run 02-create-cluster-cert-secret.sh
+# to load that cert pair into the 'kong-cluster-cert' Secret referenced below.
+#
+# The chart writes `env.*` straight through to KONG_* container env vars —
+# nothing here gets silently rewritten (unlike the kong-operator DataPlane CRD,
+# which used to override KONG_PROXY_LISTEN and strip KONG_SSL_PROTOCOLS
+# regardless of the CRD spec).
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.15"
+
+replicaCount: 2
+
+# Kept as 'app: kong-dp' so existing `kubectl -l app=kong-dp` selectors used
+# throughout the labs' verify.sh scripts keep working unchanged.
+podLabels:
+  app: kong-dp
+
+admin:
+  enabled: false
+
+env:
+  role: data_plane
+  database: "off"
+  konnect_mode: "on"
+  vitals: "off"
+  # ----- Hybrid mode: connect to Konnect control plane -----
+  cluster_control_plane: "76a3d6a237.in.cp.konghq.com:443"
+  cluster_server_name: "76a3d6a237.in.cp.konghq.com"
+  cluster_telemetry_endpoint: "76a3d6a237.in.tp.konghq.com:443"
+  cluster_telemetry_server_name: "76a3d6a237.in.tp.konghq.com"
+  cluster_mtls: pki
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  lua_ssl_trusted_certificate: system
+  proxy_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+
+secretVolumes:
+  - kong-cluster-cert
+  
+proxy:
+  enabled: true
+
+manager:
+  enabled: false
+
+ingressController:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 500m
+    memory: "2Gi"

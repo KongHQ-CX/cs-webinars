@@ -1,0 +1,167 @@
+# Kong-Air mock backend — exposes /flights and /bookings REST APIs.
+# Uses a lightweight Python/FastAPI app embedded in a ConfigMap.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kong-air
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-air-app
+  namespace: kong-air
+data:
+  main.py: |
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import Optional
+    import random, string, datetime
+
+    app = FastAPI(title="Kong Air API", version="1.0.0")
+
+    # ---------- seed data ----------
+    FLIGHTS = [
+        {"id": "KA101", "origin": "SFO", "destination": "JFK", "departure": "2026-07-10T08:00:00Z", "seats": 42, "price": 349.00},
+        {"id": "KA202", "origin": "JFK", "destination": "LHR", "departure": "2026-07-10T18:30:00Z", "seats": 15, "price": 789.00},
+        {"id": "KA303", "origin": "LHR", "destination": "SIN", "departure": "2026-07-11T06:00:00Z", "seats": 8,  "price": 1099.00},
+    ]
+
+    BOOKINGS: dict = {}
+
+    class BookingRequest(BaseModel):
+        flight_id: str
+        passenger_name: str
+        passport_number: str
+        seat_class: Optional[str] = "economy"
+
+    # ---------- flights ----------
+    @app.get("/flights")
+    def list_flights(origin: Optional[str] = None, destination: Optional[str] = None):
+        result = FLIGHTS
+        if origin:
+            result = [f for f in result if f["origin"].upper() == origin.upper()]
+        if destination:
+            result = [f for f in result if f["destination"].upper() == destination.upper()]
+        return {"flights": result, "count": len(result)}
+
+    @app.get("/flights/{flight_id}")
+    def get_flight(flight_id: str):
+        flight = next((f for f in FLIGHTS if f["id"] == flight_id.upper()), None)
+        if not flight:
+            raise HTTPException(status_code=404, detail="Flight not found")
+        return flight
+
+    # ---------- bookings ----------
+    @app.post("/bookings", status_code=201)
+    def create_booking(req: BookingRequest):
+        flight = next((f for f in FLIGHTS if f["id"] == req.flight_id.upper()), None)
+        if not flight:
+            raise HTTPException(status_code=404, detail="Flight not found")
+        if flight["seats"] < 1:
+            raise HTTPException(status_code=409, detail="No seats available")
+        ref = "BK-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        booking = {
+            "reference": ref,
+            "flight_id": flight["id"],
+            "passenger_name": req.passenger_name,
+            "seat_class": req.seat_class,
+            "created_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "status": "confirmed",
+        }
+        BOOKINGS[ref] = booking
+        flight["seats"] -= 1
+        return booking
+
+    @app.get("/bookings")
+    def list_bookings():
+        return {"bookings": list(BOOKINGS.values()), "count": len(BOOKINGS)}
+
+    @app.get("/bookings/{reference}")
+    def get_booking(reference: str):
+        booking = BOOKINGS.get(reference.upper())
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        return booking
+
+    @app.delete("/bookings/{reference}", status_code=204)
+    def cancel_booking(reference: str):
+        if reference.upper() not in BOOKINGS:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        del BOOKINGS[reference.upper()]
+
+    @app.get("/healthz")
+    def health():
+        return {"status": "ok"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-air
+  namespace: kong-air
+  labels:
+    app: kong-air
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kong-air
+  template:
+    metadata:
+      labels:
+        app: kong-air
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: api
+          image: python:3.11-slim
+          env:
+            - name: HOME
+              value: /tmp
+          command:
+            - sh
+            - -c
+            - |
+              pip install fastapi uvicorn[standard] pydantic --quiet && \
+              python -m uvicorn main:app --host 0.0.0.0 --port 8080
+          workingDir: /app
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+      volumes:
+        - name: app-code
+          configMap:
+            name: kong-air-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-air
+  namespace: kong-air
+  labels:
+    app: kong-air
+spec:
+  selector:
+    app: kong-air
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
