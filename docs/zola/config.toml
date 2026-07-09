@@ -8,8 +8,13 @@ generate_feeds = false
 
 [extra]
 repo_slug = "KongHQ-CX/cs-webinars"
-# Canonical product list, in display order. The webinars page renders a filter
-# chip for each product that at least one session is tagged with, so adding a
-# product here is harmless until a webinar uses it. A page opts in via
-# `products = [...]` under its own `[extra]` (see docs/adding-webinar-assets.md).
-products = ["Konnect", "Gateway", "Mesh", "AI Gateway", "Insomnia"]
+# Canonical tag list, in display order. Tags are a single pool that mixes Kong
+# products with thematic tags; the webinars page renders a filter chip for each
+# tag that at least one session actually uses, so adding a tag here is harmless
+# until a webinar references it. Keeping products first, then themes, just makes
+# the chip row read naturally. A page opts in via `tags = [...]` under its own
+# `[extra]` (see docs/adding-webinar-assets.md).
+tags = [
+  "Konnect", "Gateway", "Mesh", "AI Gateway", "Insomnia",
+  "Security", "Observability", "Migration", "Getting Started",
+]

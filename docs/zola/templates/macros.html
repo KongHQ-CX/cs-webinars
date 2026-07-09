@@ -1,9 +1,9 @@
 {% macro webinar_card(page, link_title=true) %}
-{%- set products = page.extra.products | default(value=[]) -%}
-{%- set product_slugs = [] -%}
-{%- for p in products -%}{%- set_global product_slugs = product_slugs | concat(with=p | slugify) -%}{%- endfor -%}
+{%- set tags = page.extra.tags | default(value=[]) -%}
+{%- set tag_slugs = [] -%}
+{%- for t in tags -%}{%- set_global tag_slugs = tag_slugs | concat(with=t | slugify) -%}{%- endfor -%}
 <article class="card"
-  data-products="{{ product_slugs | join(sep=' ') }}"
+  data-tags="{{ tag_slugs | join(sep=' ') }}"
   data-year="{{ page.date | date(format='%Y') }}">
   <span class="badge">Webinar</span>
   <div class="card__date">{{ page.date | date(format="%B %Y") }}</div>
