@@ -1,0 +1,46 @@
+# cert-manager ClusterIssuer — self-signed root CA for lab use.
+# For production, replace with an ACME (Let's Encrypt) or corporate CA issuer.
+#
+# Apply order:
+#   1. self-signed-issuer.yaml  (this file)
+#   2. proxy-certificate.yaml
+---
+# Step 1: A bare self-signed issuer to bootstrap the CA cert.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+# Step 2: CA certificate in the cert-manager namespace.
+# ClusterIssuers always read their CA secret from the cert-manager namespace —
+# if this Certificate is in any other namespace, the ClusterIssuer below cannot
+# find kong-labs-ca-secret and stays in ErrGetKeyPair indefinitely.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kong-labs-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: kong-labs-ca
+  secretName: kong-labs-ca-secret
+  duration: 87600h    # 10 years — lab CA only
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# Step 3: A CA-backed ClusterIssuer that signs the proxy leaf cert.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: kong-labs-ca-issuer
+spec:
+  ca:
+    secretName: kong-labs-ca-secret

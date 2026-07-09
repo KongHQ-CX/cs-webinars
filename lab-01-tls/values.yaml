@@ -1,0 +1,78 @@
+# Helm values — Lab 1: TLS enforcement.
+#
+# The DataPlane is a plain `kong/kong` Helm release — no operator, no CRDs.
+# The chart passes every `env.*` key straight through to a KONG_* container
+# env var, so ssl_protocols / ssl_ciphers apply directly, and the HTTP
+# listener can be disabled outright via `proxy.http.enabled: false`.
+#
+# Controls achieved:
+#   #15 — TLS 1.2+ enforced on the proxy HTTPS listener via ssl_protocols/ssl_ciphers.
+#   #1  — HTTP disabled entirely at the listener level (proxy.http.enabled: false).
+#   CP→DP cluster channel is mTLS TLS 1.2 by default (cluster_mtls: pki).
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.15"
+
+replicaCount: 2
+
+podLabels:
+  app: kong-dp
+  lab: "01-tls"
+
+admin:
+  enabled: false
+
+manager:
+  enabled: false
+
+env:
+  role: data_plane
+  database: "off"
+  konnect_mode: "on"
+  vitals: "off"
+  # ----- Hybrid mode: connect to Konnect control plane -----
+  cluster_control_plane: "76a3d6a237.in.cp.konghq.com:443"
+  cluster_server_name: "76a3d6a237.in.cp.konghq.com"
+  cluster_telemetry_endpoint: "76a3d6a237.in.tp.konghq.com:443"
+  cluster_telemetry_server_name: "76a3d6a237.in.tp.konghq.com"
+  cluster_mtls: pki
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  lua_ssl_trusted_certificate: system
+
+  # ----- Proxy TLS termination -----
+  proxy_listen: "0.0.0.0:8443 ssl http2"
+  ssl_cert: /etc/secrets/kong-proxy-tls/tls.crt
+  ssl_cert_key: /etc/secrets/kong-proxy-tls/tls.key
+
+  # ----- Control #15: TLS 1.2+ only, strong cipher suite -----
+  ssl_protocols: "TLSv1.2 TLSv1.3"
+  ssl_ciphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
+  ssl_prefer_server_ciphers: "on"
+
+  proxy_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+
+secretVolumes:
+  - kong-cluster-cert
+  - kong-proxy-tls
+
+# Control #1 — HTTP listener disabled entirely (HTTPS-only proxy).
+proxy:
+  enabled: true
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  labels:
+    app: kong-dp
+  http:
+    enabled: false
+  tls:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+    parameters:
+      - http2
+
+ingressController:
+  enabled: false
