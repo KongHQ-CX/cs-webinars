@@ -1,0 +1,15 @@
+{% macro webinar_card(page, link_title=true) %}
+<article class="card">
+  <div class="card__date">{{ page.date | date(format="%B %Y") }}</div>
+  <h2 class="card__title">
+    {% if link_title %}<a href="{{ page.permalink }}">{{ page.title }}</a>{% else %}{{ page.title }}{% endif %}
+  </h2>
+  <div class="card__summary">{{ page.content | safe }}</div>
+  <div class="card__actions">
+    <a class="btn btn--primary" href="https://github.com/{{ config.extra.repo_slug }}/releases/download/{{ page.slug }}/{{ page.slug }}.zip">Download (zip)</a>
+    {% if page.extra.recording_url %}
+    <a class="btn btn--secondary" href="{{ page.extra.recording_url }}">Recording</a>
+    {% endif %}
+  </div>
+</article>
+{% endmacro webinar_card %}

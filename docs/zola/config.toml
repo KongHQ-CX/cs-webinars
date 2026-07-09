@@ -1,0 +1,10 @@
+base_url = "https://konghq-cx.github.io/cs-webinars"
+title = "Kong CS Webinars"
+description = "Slides, code, and demo assets from Kong Customer Success-led webinars"
+compile_sass = true
+build_search_index = false
+minify_html = true
+generate_feeds = false
+
+[extra]
+repo_slug = "KongHQ-CX/cs-webinars"

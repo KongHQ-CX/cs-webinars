@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+  <meta name="description" content="{% block description %}{{ config.description }}{% endblock description %}">
+  <link rel="icon" type="image/svg+xml" href="{{ get_url(path="brand/Kong-Logomark.svg") }}">
+  <link rel="stylesheet" href="{{ get_url(path="style.css") }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a href="{{ get_url(path="/") }}" style="display:flex;align-items:center;gap:0.6rem;text-decoration:none;">
+        <img class="site-header__logomark" src="{{ get_url(path="brand/Kong-Logomark.svg") }}" alt="">
+        <span class="site-header__wordmark">Kong CS Webinars</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock content %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      Copyright &copy; 2026 <a href="https://konghq.com">Kong, Inc.</a>
+    </div>
+  </footer>
+</body>
+</html>

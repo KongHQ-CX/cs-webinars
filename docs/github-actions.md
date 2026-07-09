@@ -4,7 +4,7 @@ Three workflows run on every merge to `main`.
 
 ## Deploy docs (`.github/workflows/docs.yml`)
 
-Triggers on any push to `main` that touches `docs/**`. Before building, it scans every file in `docs/mkdocs/docs/webinars/` and replaces any `{{ RELEASE_ZIP }}` placeholder with that page's release download URL, computed from the page's own filename (the same slug used for the release tag and the zip name). Then it installs mkdocs and the plugins pinned in `docs/mkdocs/requirements.txt`, builds the site with `mkdocs build --strict`, and deploys the result to GitHub Pages.
+Triggers on any push to `main` that touches `docs/**`. It downloads a pinned, checksum-verified [Zola](https://www.getzola.org/) binary, runs `zola check` to catch broken links or config errors, builds the site with `zola build`, and deploys the result to GitHub Pages. The site itself computes each webinar's download link straight from its content filename (the same slug used for the release tag and the zip name), so there's no placeholder-substitution step in this workflow at all.
 
 ## Release webinar assets (`.github/workflows/release-webinar.yml`)
 
@@ -22,3 +22,5 @@ Runs on every PR into `main` and every push to `main`. It downloads a pinned ver
 ## Where to check if something breaks
 
 All three workflows show up under the repo's Actions tab. A failed docs or release run means the site or a release didn't publish; check the job logs there first. A failed secret scan means it found something that looks like a credential. Don't merge until you've confirmed what it flagged and removed it (rewriting history if it already landed in a commit).
+
+PRs from forks are a special case: GitHub holds their workflow runs in an `action_required` state until a maintainer approves them from the Actions tab, so a fork PR with no visible checks usually just means nobody's approved the run yet, not that the workflows didn't apply.

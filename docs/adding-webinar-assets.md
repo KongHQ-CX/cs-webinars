@@ -4,19 +4,18 @@ Notes for posting assets from a session you ran.
 
 1. Create a folder named `webinars/YYYY-MM-topic-slug/`. Base the slug on the session's registration page title (kebab-case, trimmed if it's long), so it matches what attendees already saw when they signed up.
 2. Drop in whatever the session used: slides, sample code, scripts. Keep individual files under GitHub's 100 MB limit. Leave the recording out of the repo and link to wherever it's hosted instead. Double-check there are no API keys, tokens, passwords, or other secrets in what you're committing. Sample code and demo scripts are the most common place these slip in. A secret scan runs on every PR as a fallback, but don't rely on it as your only check.
-3. Add a page for the session at `docs/mkdocs/docs/webinars/YYYY-MM-topic-slug.md` so it shows up on the docs site. Reuse the registration page's title and description instead of writing new copy. Leave `{{ RELEASE_ZIP }}` exactly as written. The docs workflow fills it in with the release download link automatically when the site rebuilds. For example:
+3. Add a page for the session at `docs/zola/content/webinars/YYYY-MM-topic-slug.md` so it shows up on the docs site. Give it TOML front matter with the session's title and date (use the first of the month, matching the folder's month granularity), then write one or two sentences as the body, reused from the registration page instead of new copy. Add a `recording_url` under `[extra]` if you have one. The site builds the download link itself from the filename, so there's no placeholder to fill in. For example:
 
-    ```markdown
-    # <Webinar title>
-
-    Held <Month year>.
-
+    ```
+    +++
+    title = "<Webinar title>"
+    date = YYYY-MM-01
+    [extra]
+    recording_url = "<link>"
+    +++
     <One or two sentences from the registration page describing what the session covered.>
-
-    - [Download everything (zip)]({{ RELEASE_ZIP }})
-    - [Recording](<link>)
     ```
 
 4. Open a PR.
 
-Merging to `main` does the rest: a workflow zips `webinars/YYYY-MM-topic-slug/` and publishes it as a GitHub Release tagged `YYYY-MM-topic-slug`, and the docs site rebuilds, filling in the `{{ RELEASE_ZIP }}` placeholder and redeploying. See [docs/github-actions.md](github-actions.md) for what each workflow does and where to check if one fails.
+Merging to `main` does the rest: a workflow zips `webinars/YYYY-MM-topic-slug/` and publishes it as a GitHub Release tagged `YYYY-MM-topic-slug`, and the docs site rebuilds and redeploys automatically. See [docs/github-actions.md](github-actions.md) for what each workflow does and where to check if one fails.
