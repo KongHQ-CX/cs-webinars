@@ -1,4 +1,22 @@
-# Kong Security Labs — Hybrid Mode on GKE
+Held <July 2026>.
+
+Most API gateway deployments have at least one of these: HTTP still running somewhere. A database password in a config file. No rate limiting on admin-facing routes. No audit logs.
+
+None of these are exotic. All of them are how breaches start.
+
+What we’re covering:
+
+Network & Transport Security
+Secrets & Credential Management
+Authentication & Access Control
+Gateway Hardening
+Observability & Defense
+Resilience & Infrastructure
+
+- [Download everything (zip)]({{ RELEASE_ZIP }})
+- [Recording](<link>)
+
+# Hardening Kong Konnect - lab setup
 
 Kong Gateway in **Konnect hybrid mode** (CP in Konnect cloud, DP on GKE via the **`kong/kong` Helm chart**).  
 The Control Plane is created once in the Konnect UI, the DP client mTLS certificate is generated and
