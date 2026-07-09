@@ -1,10 +1,9 @@
 # Kong Security Labs — Hybrid Mode on GKE
 
 Kong Gateway in **Konnect hybrid mode** (CP in Konnect cloud, DP on GKE via the **`kong/kong` Helm chart**).  
-Fully operator-free: no `kong-operator`, no `KonnectGatewayControlPlane`/`KonnectExtension`/`KongService`/`KongRoute`
-CRDs. The Control Plane is created once in the Konnect UI, the DP client mTLS certificate is generated and
+The Control Plane is created once in the Konnect UI, the DP client mTLS certificate is generated and
 registered manually, and the DataPlane is installed as a plain Helm release (see
-[Why no operator](#why-no-operator)).  
+
 Backend: **Kong-Air** mock API — `/flights` and `/bookings` endpoints.  
 Routing: **Services + Routes** created directly via the Konnect Admin API.
 
@@ -33,14 +32,6 @@ GKE Cluster — kong namespace
   └── kong-air namespace
         └── kong-air    (Deployment — /flights + /bookings)
 ```
-
-## Why no operator
-
-Earlier iterations of this repo used `kong-operator` to manage a `DataPlane` CRD and to auto-provision
-the DP client certificate via `KonnectGatewayControlPlane`/`KonnectExtension`. The `DataPlane` CRD
-silently overrode fields like `KONG_PROXY_LISTEN` and stripped `KONG_SSL_PROTOCOLS` regardless of what
-the CRD spec requested, which made lab controls like TLS-version enforcement unreliable. Removing the
-operator entirely avoids this class of problem:
 
 - **DataPlane workload** — a plain `kong/kong` Helm release. Every `env.*` value in a lab's `values.yaml`
   is passed straight through to a `KONG_*` container env var, with nothing rewritten underneath.
