@@ -23,6 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fill in release download links
+        run: |
+          for f in docs/mkdocs/docs/webinars/*.md; do
+            slug=$(basename "$f" .md)
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${slug}/${slug}.zip"
+            sed -i "s#{{ RELEASE_ZIP }}#${url}#g" "$f"
+          done
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
