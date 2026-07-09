@@ -13,4 +13,4 @@ Thanks for joining one of Kong's Customer Success-led webinars. This is where we
 
 ## Finding your session
 
-Each webinar has its own folder in the repo, named by date and topic, like `2026-07-webinar-name/`. Open the folder for the session you attended and grab what you need: slides, sample code, scripts, a link to the recording.
+Each webinar has its own folder under `webinars/` in the repo, named by date and topic, like `webinars/2026-07-webinar-name/`. Open the folder for the session you attended and grab what you need: slides, sample code, scripts, a link to the recording.

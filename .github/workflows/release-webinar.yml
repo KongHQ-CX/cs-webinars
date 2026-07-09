@@ -1,0 +1,72 @@
+name: Release webinar assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'webinars/**'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      slugs: ${{ steps.changes.outputs.slugs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          before="$BEFORE_SHA"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            before=$(git rev-parse "${AFTER_SHA}^")
+          fi
+
+          slugs="[]"
+          candidates=$(git diff --name-only "$before" "$AFTER_SHA" -- 'webinars/*' | awk -F/ '{print $2}' | sort -u)
+          real_slugs=""
+          for slug in $candidates; do
+            if [ -d "webinars/$slug" ]; then
+              real_slugs="${real_slugs}${slug}"$'\n'
+            fi
+          done
+          if [ -n "$real_slugs" ]; then
+            slugs=$(printf '%s' "$real_slugs" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+
+          echo "slugs=$slugs" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.slugs != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        slug: ${{ fromJson(needs.detect-changes.outputs.slugs) }}
+    concurrency:
+      group: release-webinar-${{ matrix.slug }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip webinar folder
+        working-directory: webinars
+        env:
+          SLUG: ${{ matrix.slug }}
+        run: zip -r "../${SLUG}.zip" "$SLUG"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.slug }}
+          name: ${{ matrix.slug }}
+          files: ${{ matrix.slug }}.zip
+          body: >-
+            Auto-generated release for webinars/${{ matrix.slug }}/.
+            Rebuilt automatically whenever that folder changes on main.
