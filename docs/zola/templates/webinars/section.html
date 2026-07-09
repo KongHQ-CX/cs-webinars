@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}Webinars — {{ config.title }}{% endblock title %}
+
+{% block content %}
+<section class="section-header">
+  <div class="wrap">
+    <h1>Webinars</h1>
+    <p>Every session we've posted, newest first. Pick one to download its assets.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="grid">
+    {% if section.pages | length > 0 %}
+      {% for page in section.pages %}
+        {{ macros::webinar_card(page=page) }}
+      {% endfor %}
+    {% else %}
+      <div class="empty-card">Nothing posted yet. Check back after the next session.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

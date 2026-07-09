@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero crop-marks">
+  <img class="hero__watermark" src="{{ get_url(path="brand/Kong-Logomark.svg") }}" alt="" aria-hidden="true">
+  <div class="wrap">
+    <h1>Everything from our <em>webinars</em>, in one place.</h1>
+    <p>Slides, sample code, and demo scripts from Kong Customer Success-led sessions. Browse our webinars to find and download the assets from each one.</p>
+    <a class="btn btn--primary" href="{{ get_url(path="webinars/") }}">Browse webinars</a>
+  </div>
+</section>
+{% endblock content %}

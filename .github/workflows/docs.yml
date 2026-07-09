@@ -17,33 +17,36 @@ concurrency:
   group: pages-deploy
   cancel-in-progress: false
 
+env:
+  ZOLA_VERSION: 0.22.1
+  ZOLA_SHA256: 0ca09aa40376aaa9ddfb512ff9ad963262ef95edb0d0f2d5ec6961b6f5cf22ef
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fill in release download links
+      - name: Install zola
         run: |
-          for f in docs/mkdocs/docs/webinars/*.md; do
-            slug=$(basename "$f" .md)
-            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${slug}/${slug}.zip"
-            sed -i "s#{{ RELEASE_ZIP }}#${url}#g" "$f"
-          done
+          curl -sSfL -o zola.tar.gz \
+            "https://github.com/getzola/zola/releases/download/v${ZOLA_VERSION}/zola-v${ZOLA_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${ZOLA_SHA256}  zola.tar.gz" | sha256sum -c -
+          tar -xzf zola.tar.gz zola
+          sudo mv zola /usr/local/bin/zola
+          rm zola.tar.gz
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: docs/mkdocs/requirements.txt
+      - name: Check site
+        working-directory: docs/zola
+        run: zola check
 
-      - run: pip install -r docs/mkdocs/requirements.txt
-
-      - run: mkdocs build -f docs/mkdocs/mkdocs.yml --strict
+      - name: Build site
+        working-directory: docs/zola
+        run: zola build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/mkdocs/site
+          path: docs/zola/public
 
   deploy:
     needs: build

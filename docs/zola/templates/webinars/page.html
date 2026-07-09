@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}{{ page.title }} — {{ config.title }}{% endblock title %}
+{% block description %}{{ page.content | striptags | truncate(length=160) }}{% endblock description %}
+
+{% block content %}
+<div class="wrap single">
+  <a class="back-link" href="{{ get_url(path="webinars/") }}">&larr; All webinars</a>
+  {{ macros::webinar_card(page=page, link_title=false) }}
+</div>
+{% endblock content %}
