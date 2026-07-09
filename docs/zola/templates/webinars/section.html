@@ -12,8 +12,58 @@
   </div>
 </section>
 
+{#- Derive the filter options from the pages actually present, so no empty
+    controls ever render. Products keep config's display order; years descend. -#}
+{%- set_global used_products = [] -%}
+{%- set_global used_years = [] -%}
+{%- for page in section.pages -%}
+  {%- for p in page.extra.products | default(value=[]) -%}
+    {%- set slug = p | slugify -%}
+    {%- if slug not in used_products -%}{%- set_global used_products = used_products | concat(with=slug) -%}{%- endif -%}
+  {%- endfor -%}
+  {%- set year = page.date | date(format='%Y') -%}
+  {%- if year not in used_years -%}{%- set_global used_years = used_years | concat(with=year) -%}{%- endif -%}
+{%- endfor -%}
+{%- set used_years = used_years | sort | reverse -%}
+
 <div class="wrap">
-  <div class="grid">
+  {% if section.pages | length > 0 %}
+  <div class="filters" data-webinar-filters hidden>
+    <div class="filters__search">
+      <label class="filters__label" for="webinar-search">Search</label>
+      <input type="search" id="webinar-search" class="filters__input"
+             placeholder="Search webinars…" autocomplete="off" data-filter-search>
+    </div>
+
+    <div class="filters__row">
+      <div class="filters__chips" role="group" aria-label="Filter by product">
+        <button type="button" class="chip chip--active" data-filter-product="" aria-pressed="true">All</button>
+        {%- for product in config.extra.products -%}
+          {%- set slug = product | slugify -%}
+          {%- if slug in used_products %}
+          <button type="button" class="chip" data-filter-product="{{ slug }}" aria-pressed="false">{{ product }}</button>
+          {%- endif -%}
+        {%- endfor %}
+      </div>
+
+      {%- if used_years | length > 0 %}
+      <div class="filters__year">
+        <label class="filters__label" for="webinar-year">Year</label>
+        <select id="webinar-year" class="filters__select" data-filter-year>
+          <option value="">All years</option>
+          {%- for year in used_years %}
+          <option value="{{ year }}">{{ year }}</option>
+          {%- endfor %}
+        </select>
+      </div>
+      {%- endif %}
+    </div>
+
+    <p class="filters__status" data-filter-status aria-live="polite"></p>
+  </div>
+  {% endif %}
+
+  <div class="grid" data-webinar-grid>
     {% if section.pages | length > 0 %}
       {% for page in section.pages %}
         {{ macros::webinar_card(page=page) }}
@@ -22,5 +72,9 @@
       <div class="empty-card">Nothing posted yet. Check back after the next session.</div>
     {% endif %}
   </div>
+
+  <div class="empty-card" data-filter-empty hidden>No webinars match those filters.</div>
 </div>
+
+<script src="{{ get_url(path='js/webinar-filters.js') }}" defer></script>
 {% endblock content %}
