@@ -19,6 +19,8 @@ If a session's folder gets edited later, merging that change re-zips and re-publ
 
 Runs on every PR into `main` and every push to `main`. It downloads a pinned version of [gitleaks](https://github.com/gitleaks/gitleaks), verifies the download against a known checksum, and scans the full commit history for anything that looks like a credential. This is a backstop, not the primary defense: check your own files for secrets before you commit, per [docs/adding-webinar-assets.md](adding-webinar-assets.md).
 
+Gitleaks reads its config from [`.gitleaks.toml`](../.gitleaks.toml) at the repo root, which extends the default ruleset with a short allowlist of values we have confirmed are safe to publish (a lab's throwaway self-signed cert, for example). When the scan flags something you know is safe, add a scoped allowlist entry there rather than merging past the failure. The process is written up in [docs/overriding-a-safe-secret-scan.md](overriding-a-safe-secret-scan.md).
+
 ## Where to check if something breaks
 
 All three workflows show up under the repo's Actions tab. A failed docs or release run means the site or a release didn't publish; check the job logs there first. A failed secret scan means it found something that looks like a credential. Don't merge until you've confirmed what it flagged and removed it (rewriting history if it already landed in a commit).
