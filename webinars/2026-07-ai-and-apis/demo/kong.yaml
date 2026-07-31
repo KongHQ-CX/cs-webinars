@@ -1,0 +1,18 @@
+_format_version: "3.0"
+
+# ---------------------------------------------------------------------------
+# STAGE 2 — the control point, routing only. No auth, no limits, no logging.
+# Kong listens on :8000 and forwards everything under /api to the backend.
+#
+# On a Mac, Docker reaches the FastAPI service running on your host via
+# host.docker.internal. The backend runs on port 8080.
+# ---------------------------------------------------------------------------
+
+services:
+  - name: inventory-orders
+    url: http://host.docker.internal:8080
+    routes:
+      - name: api-route
+        paths:
+          - /api
+        strip_path: true

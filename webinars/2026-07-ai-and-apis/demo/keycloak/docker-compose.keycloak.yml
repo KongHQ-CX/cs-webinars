@@ -1,0 +1,24 @@
+# Keycloak as the OAuth 2.0 / OIDC identity provider for the MCP demo.
+# Runs on host port 8081 (8080 is taken by the FastAPI backend).
+#
+#   docker compose -f keycloak/docker-compose.keycloak.yml up -d
+#   ./keycloak/setup-keycloak.sh      # creates the realm, clients, and a user
+#
+# KC_HOSTNAME_URL fixes the token "iss" claim to the same URL Kong validates
+# against. Pair with "127.0.0.1 host.docker.internal" in /etc/hosts so the host
+# and the Kong data-plane container both resolve this identically.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    container_name: keycloak-mcp
+    command: start-dev --http-port=8080
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_URL: http://host.docker.internal:8081
+      KC_HOSTNAME_ADMIN_URL: http://localhost:8081
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
