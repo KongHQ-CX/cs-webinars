@@ -195,37 +195,7 @@ uses it for a client-credentials token), a public client `mcp-inspector` (for
 interactive login), and a `demo`/`demo` user. Issuer:
 `http://host.docker.internal:8081/realms/mcp`.
 
-### 5.2 — Generate the MCP server, add governance, sync to Konnect
-The backend has carried no auth, no rate limit, and no audit trail this whole
-time. Now we add all three at the gateway — without touching the backend.
-
-Push the governed config to Konnect (same service and route, now with plugins):
-```bash
-ksync kong.mcp.governed.yaml
-```
-`kong.governance.yaml` adds `key-auth`, `rate-limiting`, and `file-log` plus a
-consumer with an API key. Since decK is declarative, this one file is the full
-desired state for the `/api` route.
-
-**Auth is now enforced.** The unauthenticated call that worked in stage 2 is now
-rejected:
-```bash
-curl -i localhost:8000/api/products            # 401 No API key found
-curl -s localhost:8000/api/products \
-  -H 'apikey: demo-secret-key-123' | python3 -m json.tool   # 200, works
-```
-
-**Rate limiting is enforced** at 5 requests/minute. Fire six and watch the last
-one get blocked by Kong, not the backend:
-```bash
-for i in $(seq 1 6); do
-  curl -s -o /dev/null -w "%{http_code}\n" \
-    localhost:8000/api/products -H 'apikey: demo-secret-key-123'
-done
-# five 200s, then 429 Too Many Requests
-```
-
-### 5.3 — Drive it with OpenAI through Kong
+### 5.2 — Drive it with OpenAI through Kong
 
 ```bash
 python openai_mcp_agent.py
@@ -235,14 +205,6 @@ with that bearer token, lists the tools Kong generated, and lets OpenAI call the
 to answer the task. The model holds only a short-lived gateway token — never a
 credential for the backend.
 
-### 5.4 — Show the rate limit on the MCP proxy
-
-```bash
-python rate_limit_demo.py
-```
-It fires more MCP calls than the per-minute ceiling (`RATE_LIMIT_PER_MIN`) and you
-watch Kong return `429` once it's crossed — enforced at the gateway, not the
-backend.
 ---
 
 ## Reset / teardown

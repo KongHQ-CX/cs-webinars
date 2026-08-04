@@ -1,6 +1,6 @@
 +++
 title = "AI and APIs: What changes when Agents make the calls"
-date = 2026-07-30
+date = 2026-07-01
 [extra]
 tags = ["Konnect", "AI Gateway"]
 recording_url = "https://konghq.com/events/webinars/ai-and-apis-what-changes-when-agents-make-the-calls"
