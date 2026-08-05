@@ -1,0 +1,64 @@
+# Kong Gateway as a Kong Konnect DATA PLANE (mTLS to your control plane).
+#
+# This node holds no local config — it pulls its services, routes, and plugins
+# from your Konnect control plane over mTLS. Push config to the CP with decK:
+#   deck gateway sync --konnect-token "$KONNECT_TOKEN" \
+#     --konnect-control-plane-name "$KONNECT_CONTROL_PLANE" kong.mcp.governed.yaml
+#
+# One-time setup in Konnect:
+#   Gateway Manager > <your control plane> > + New Data Plane Node > Docker.
+#   Konnect generates a client certificate/key and shows the CP + telemetry
+#   endpoints. Then:
+#     1) save the certificate to   konnect/tls.crt
+#        and the private key to     konnect/tls.key
+#     2) put the four endpoints in .env (KONNECT_CP_* / KONNECT_TP_*)
+#     3) docker compose up
+#
+# Proxy: 8000 (HTTP) and 8443 (HTTPS). The data plane reaches the FastAPI
+# backend on your Mac via host.docker.internal:8080.
+services:
+  kong-dp:
+    image: kong/kong-gateway:3.15
+    container_name: kong-dp
+    restart: on-failure
+    environment:
+      KONG_ROLE: data_plane
+      KONG_DATABASE: "off"
+      KONG_VITALS: "off"
+      KONG_CLUSTER_MTLS: pki
+      KONG_CLUSTER_CONTROL_PLANE: ${KONNECT_CP_ENDPOINT}
+      KONG_CLUSTER_SERVER_NAME: ${KONNECT_CP_SERVER_NAME}
+      KONG_CLUSTER_TELEMETRY_ENDPOINT: ${KONNECT_TP_ENDPOINT}
+      KONG_CLUSTER_TELEMETRY_SERVER_NAME: ${KONNECT_TP_SERVER_NAME}
+      # Certificates are mounted as files (see volumes). Keeps the private key
+      # out of this compose file and out of version control.
+      KONG_CLUSTER_CERT: /etc/kong/konnect/tls.crt
+      KONG_CLUSTER_CERT_KEY: /etc/kong/konnect/tls.key
+      KONG_LUA_SSL_TRUSTED_CERTIFICATE: system
+      KONG_TLS_CERTIFICATE_VERIFY: "off"
+      KONG_KONNECT_MODE: "on"
+      KONG_ROUTER_FLAVOR: expressions
+    volumes:
+      - ./konnect/tls.crt:/etc/kong/konnect/tls.crt:ro
+      - ./konnect/tls.key:/etc/kong/konnect/tls.key:ro
+      - ./logs:/kong/logs
+    ports:
+      - "8000:8000"   # proxy (HTTP)
+      - "8443:8443"   # proxy (HTTPS)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+# ---------------------------------------------------------------------------
+# Prefer to paste the certs inline instead of mounting files? Replace the
+# KONG_CLUSTER_CERT / KONG_CLUSTER_CERT_KEY lines above with block scalars and
+# drop the volumes: section — Kong accepts inline PEM as well as file paths:
+#
+#   KONG_CLUSTER_CERT: |
+#     -----BEGIN CERTIFICATE-----
+#     MIICEj...your cert...WyN
+#     -----END CERTIFICATE-----
+#   KONG_CLUSTER_CERT_KEY: |
+#     -----BEGIN PRIVATE KEY-----
+#     MIGTAg...your key...xBCW
+#     -----END PRIVATE KEY-----
+# ---------------------------------------------------------------------------

@@ -1,0 +1,106 @@
+_format_version: '3.0'
+services:
+- host: host.docker.internal
+  id: 7c05382a-179c-567d-b64a-c642df59f67f
+  name: inventory-orders
+  path: /
+  plugins: []
+  port: 8080
+  protocol: http
+  routes:
+  - id: b4b80a5f-4a56-5fee-bce1-a0464efdbf1c
+    name: inventory-orders-mcp
+    paths:
+    - /mcp
+    plugins:
+    - config:
+        mode: conversion-listener
+        tools:
+        - annotations:
+            title: Liveness check
+          description: Liveness check
+          method: GET
+          name: health
+          path: /health
+        - annotations:
+            title: Get the stock level for a SKU
+          description: Get the stock level for a SKU
+          method: GET
+          name: get-inventory
+          parameters:
+          - in: path
+            name: sku
+            required: true
+            schema:
+              type: string
+          path: /inventory/{sku}
+        - annotations:
+            title: Place an order for a quantity of a SKU
+          description: Place an order for a quantity of a SKU
+          method: POST
+          name: place-order
+          path: /orders
+          request_body:
+            content:
+              application/json:
+                schema:
+                  properties:
+                    quantity:
+                      type: integer
+                    sku:
+                      type: string
+                  required:
+                  - sku
+                  - quantity
+                  type: object
+            required: true
+        - annotations:
+            title: List all products with price and stock
+          description: List all products with price and stock
+          method: GET
+          name: list-products
+          path: /products
+        - annotations:
+            title: Get one product by SKU
+          description: Get one product by SKU
+          method: GET
+          name: get-product
+          parameters:
+          - in: path
+            name: sku
+            required: true
+            schema:
+              type: string
+          path: /products/{sku}
+      id: 4bc71b6d-dabb-59fc-82fc-2d87d1563886
+      name: ai-mcp-proxy
+      tags: []
+    - name: openid-connect
+      config:
+        issuer: http://host.docker.internal:8081/realms/mcp
+        auth_methods:
+        - bearer
+        consumer_claim:
+        - sub
+        consumer_optional: true
+        scopes_required: []
+        cache_tokens_salt: webinar-demo-salt
+        session_secret: webinar-demo-session-secret-change-me
+    - name: rate-limiting
+      config:
+        minute: 10
+        policy: local
+    - name: cors
+      config:
+        origins:
+        - http://localhost:6274
+    tags: []
+  - name: inventory-orders-direct
+    paths:
+    - /products
+    - /inventory
+    - /orders
+    - /health
+    strip_path: false
+    plugins: []
+  tags: []
