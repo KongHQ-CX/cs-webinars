@@ -23,3 +23,17 @@ See docs/overriding-a-safe-secret-scan.md for the reasoning trail.
 paths = [
   '''^webinars/2026-07-hardening-konnect/00-base/cert/tls\.(key|cert)$''',
 ]
+
+[[allowlists]]
+description = """
+Throwaway demo API key ("demo-secret-key-123") used in curl examples for the
+AI and APIs webinar README. It authenticates nothing real -- localhost only,
+walkthrough material -- and was flagged by gitleaks in this PR's commit
+history. See docs/overriding-a-safe-secret-scan.md for the reasoning trail.
+"""
+paths = [
+  '''^webinars/2026-07-ai-and-apis/demo/README\.md$''',
+]
+regexes = [
+  '''demo-secret-key-123''',
+]

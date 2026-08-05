@@ -196,33 +196,15 @@ interactive login), and a `demo`/`demo` user. Issuer:
 `http://host.docker.internal:8081/realms/mcp`.
 
 ### 5.2 — Generate the MCP server, add governance, sync to Konnect
-The backend has carried no auth, no rate limit, and no audit trail this whole
-time. Now we add all three at the gateway — without touching the backend.
+Convert the API into an MCP server, add governace to the MCP server.
 
-Push the governed config to Konnect (same service and route, now with plugins):
+Push the governed config to Konnect:
 ```bash
 ksync kong.mcp.governed.yaml
 ```
-`kong.mcp.governed.yaml` adds `openid-connect`, `rate-limiting`, and `cors`. Since decK is declarative, this one file is the full
-desired state for the `/api` route.
+`kong.mcp.governed.yaml` adds `openid-connect`, `rate-limiting`, and `cors`.
 
-**Auth is now enforced.** The unauthenticated call that worked in stage 2 is now
-rejected:
-```bash
-curl -i localhost:8000/api/products            # 401 No API key found
-curl -s localhost:8000/api/products \
-  -H 'apikey: <Your secret key>' | python3 -m json.tool   # 200, works
-```
-
-**Rate limiting is enforced** at 5 requests/minute. Fire six and watch the last
-one get blocked by Kong, not the backend:
-```bash
-for i in $(seq 1 6); do
-  curl -s -o /dev/null -w "%{http_code}\n" \
-    localhost:8000/api/products -H 'apikey: <Your secret key>'
-done
-# five 200s, then 429 Too Many Requests
-```
+**Auth is now enforced.** Test MCP connectivity again using Insomnia. The unauthenticated call that worked in stage 2 is now rejected. And Insomnia prompts you to do OAuth
 
 ### 5.3 — Drive it with OpenAI through Kong
 
@@ -239,7 +221,7 @@ credential for the backend.
 ```bash
 python rate_limit_demo.py
 ```
-It fires more MCP calls than the per-minute ceiling (`RATE_LIMIT_PER_MIN`) and you
+It fires more MCP calls than the per-minute ceiling (`10`) and you
 watch Kong return `429` once it's crossed — enforced at the gateway, not the
 backend.
 ---
