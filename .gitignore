@@ -1,3 +1,4 @@
 # ─── Zola build output ──────────────────────────────────────────────
 docs/zola/public/
 .superpowers/
+.DS_Store
