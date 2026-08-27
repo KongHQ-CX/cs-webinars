@@ -1,6 +1,18 @@
 # Overriding a safe secret-scan finding
 
-Sometimes the secret scan flags a value that is genuinely safe to publish: a throwaway self-signed cert generated for a lab, a dummy token in an example config, a fake password in a demo script. This is how to clear the finding without turning the scan off for everyone.
+Sometimes the secret scan flags a value that is genuinely safe to publish: a throwaway self-signed cert generated for a lab, a dummy token in an example config, a fake password in a demo script. This covers two things: the placeholder value to reach for so most of these findings never happen, and how to clear the ones that still do without turning the scan off for everyone.
+
+## Use `__REPLACE_ME__` for placeholder credentials
+
+Most findings in webinar assets are just a stand-in credential in a `.env.example`, a curl `-H` header, or a config sample — not a value that needs an allowlist entry at all. For those, use `__REPLACE_ME__`:
+
+```
+export DECK_WEBINAR_API_KEY="__REPLACE_ME__"
+```
+
+It is confirmed clean against gitleaks' generic secret rules in every place webinar examples put credentials: `.env` files, curl headers, YAML, JSON, and Python config, regardless of the variable name (`*_KEY`, `*_TOKEN`, `*_SECRET`, `*_PASSWORD` all pass). A value that merely *reads* like a placeholder is not a safe substitute — `demo-secret-key-123` and even `set-me-before-running` still get flagged, because the rule reacts to a value's shape (lowercase, hyphenated, enough entropy to look real), not whether a human would recognize it as a stand-in. `__REPLACE_ME__` is the one that holds up everywhere it's been tested, so reach for it instead of inventing a new placeholder per file. Say what the real value needs to be in the comment above the line, not in the placeholder itself.
+
+This only helps when the value can be arbitrary. A cert or key that has to be well-formed for a lab to actually run still needs real (if throwaway) material — that case still needs the allowlist below.
 
 ## First, confirm it is actually safe
 
