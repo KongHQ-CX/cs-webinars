@@ -37,3 +37,19 @@ paths = [
 regexes = [
   '''demo-secret-key-123''',
 ]
+
+[[allowlists]]
+description = """
+Placeholder API key ("webinar-secret-key-123") for a Kong key-auth consumer
+that the AI Cost Optimization webinar's own deck.yaml creates on the
+attendee's locally-run Kong Gateway. It authenticates nothing external and
+was already superseded by __REPLACE_ME__ in the current file, but the
+original value still landed in this PR's commit history. See
+docs/overriding-a-safe-secret-scan.md for the reasoning trail.
+"""
+paths = [
+  '''^webinars/2026-08-ai-cost-optimization/\.env\.example$''',
+]
+regexes = [
+  '''webinar-secret-key-123''',
+]

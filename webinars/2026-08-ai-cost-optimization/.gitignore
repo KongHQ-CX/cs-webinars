@@ -1,0 +1,3 @@
+# Local credentials file containing sensitive keys and tokens
+.DS_Store
+.env
