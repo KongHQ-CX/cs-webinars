@@ -1,8 +1,8 @@
 +++
-title = "Mastering LLM Economics: Operationalizing FinOps at the API Gateway Layer"
+title = "Spend Intentionally: cutting LLM costs without cutting quality with Kong AI Gateway"
 date = 2026-08-01
 [extra]
 tags = ["AI Gateway", "Observability"]
 recording_url = ""
 +++
-Enterprise generative AI spend is surging exponentially, yet up to 90% of total inference spend is wasted. This webinar covers 7 hands-on cost-optimization scenarios running on Kong Gateway, demonstrating how to gain absolute financial governance, caching, compression, and rate limiting at the platform tier without changing application code.
+LLM costs are difficult to forecast, difficult to attribute and generally only visible once the monthly invoice arrives. This session examines the cost controls available in Kong AI Gateway, which operates between your applications and your LLM providers.
