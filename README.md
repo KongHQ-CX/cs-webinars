@@ -4,7 +4,7 @@ This is where Kong's Customer Success team posts the assets from our webinars: s
 
 ## Finding a webinar
 
-Start at the [webinar site](https://konghq-cx.github.io/cs-webinars/webinars/): it lists every session with a summary and a one-click download. Prefer the raw files? Browse [`webinars/`](webinars/) in this repo, or use GitHub's search if you already know the topic or date.
+Start at the [webinar site](https://cs.konghq.com/webinars/): it lists every session with a summary and a one-click download. Prefer the raw files? Browse [`webinars/`](webinars/) in this repo, or use GitHub's search if you already know the topic or date.
 
 ## What's in here
 

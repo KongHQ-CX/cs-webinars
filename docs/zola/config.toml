@@ -1,4 +1,4 @@
-base_url = "https://konghq-cx.github.io/cs-webinars"
+base_url = "https://cs.konghq.com"
 title = "Kong CS Webinars"
 description = "Slides, code, and demo assets from Kong Customer Success-led webinars"
 compile_sass = true
