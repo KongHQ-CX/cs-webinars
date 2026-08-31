@@ -35,7 +35,7 @@ services:
               vectordb:
                 strategy: redis
                 dimensions: 1536
-                threshold: 0.75
+                threshold: 0.3
                 distance_metric: cosine
                 redis:
                   host: ${{ env "DECK_REDIS_HOST" }}
