@@ -16,6 +16,7 @@
     {% if page.extra.recording_url %}
     <a class="btn btn--secondary" href="{{ page.extra.recording_url }}">Watch</a>
     {% endif %}
+    <a class="btn btn--secondary" href="https://github.com/{{ config.extra.repo_slug }}/tree/main/webinars/{{ page.slug }}">Browse on GitHub</a>
   </div>
 </article>
 {% endmacro webinar_card %}
