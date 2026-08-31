@@ -50,7 +50,7 @@ Here is how the AI Semantic Cache plugin is declared on the `/semantic-cache` ro
                     upstream_url: https://api.openai.com/v1/embeddings
               vectordb:
                 strategy: redis
-                threshold: 0.75
+                threshold: 0.3
                 distance_metric: cosine
                 redis:
                   host: ${{ env "REDIS_HOST" }}
