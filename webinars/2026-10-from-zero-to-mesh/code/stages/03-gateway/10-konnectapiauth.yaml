@@ -1,0 +1,15 @@
+# Tells Kong Operator how to call Konnect. The Secret konnect-api-auth in this namespace holds the
+# token (filled by bin/fill-from-env.sh operator with OPERATOR_SECRET_NAMESPACE=kong). The Secret
+# carries the labels the Operator needs: konghq.com/credential=konnect and konghq.com/secret=true.
+# Docs: https://developer.konghq.com/operator/get-started/konnect-crds/authentication/
+# apply.sh fills KONNECT_SERVER_URL, a hostname such as us.api.konghq.com.
+apiVersion: konnect.konghq.com/v1alpha1
+kind: KonnectAPIAuthConfiguration
+metadata:
+  name: konnect-api-auth
+  namespace: kong
+spec:
+  type: secretRef
+  secretRef:
+    name: konnect-api-auth
+  serverURL: ${KONNECT_SERVER_URL}

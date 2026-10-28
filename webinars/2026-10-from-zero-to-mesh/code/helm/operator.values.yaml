@@ -1,0 +1,18 @@
+# Helm values for Kong Operator on the gateway cluster (zone 1 only).
+# bin/install-operator.sh passes this file to helm with -f, and pins the chart version.
+# Chart: kong/kong-operator from https://charts.konghq.com, version pinned by the script.
+#
+# env.ENABLE_CONTROLLER_KONNECT turns on the controller for Konnect objects (KonnectAPIAuthConfiguration
+# and the control plane mirror the gateway stage uses). The Kong docs set it with
+# --set env.ENABLE_CONTROLLER_KONNECT=true.
+# Docs: https://developer.konghq.com/operator/install/ and
+#       https://developer.konghq.com/operator/get-started/konnect-crds/install/
+#
+# The image tag is not set here. The chart's own default is its application version, so the chart
+# version in install-operator.sh pins the image. The docs show --set image.tag=2.3, a floating minor
+# tag. The script reads the rendered image and refuses a tag without a full version.
+#
+# Webhook certificates: the chart makes self-signed ones when cert-manager is not enabled. That is
+# fine for a demo, so nothing is set for cert-manager here.
+env:
+  ENABLE_CONTROLLER_KONNECT: true

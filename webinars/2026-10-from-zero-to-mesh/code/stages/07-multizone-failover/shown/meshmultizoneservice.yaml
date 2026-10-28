@@ -1,0 +1,21 @@
+# Reference copy, not applied by apply.sh: the global control plane owns this object and it was
+# applied before the webinar (Terraform against the Konnect Mesh API). apply.sh only checks it exists.
+# It groups the demo-app MeshService of every zone behind one name. Each zone gets the hostname
+# demo-app.mzsvc.mesh.local. Callers prefer the instances in their own zone.
+# Docs: https://developer.konghq.com/mesh/meshmultizoneservice/
+apiVersion: kuma.io/v1alpha1
+kind: MeshMultiZoneService
+metadata:
+  name: demo-app
+  namespace: kong-mesh-system
+  labels:
+    kuma.io/mesh: ${MESH_NAME}
+spec:
+  selector:
+    meshService:
+      matchLabels:
+        kuma.io/display-name: demo-app
+        k8s.kuma.io/namespace: demo
+  ports:
+    - port: 80
+      appProtocol: http

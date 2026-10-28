@@ -1,0 +1,65 @@
+# apply.sh fills DEMO_IMAGE (digest-pinned, from the environment), ZONE_NAME and MESH_NAME.
+# The admin port (9911) is not declared here: the app binds it to 127.0.0.1 only.
+# It is not 9901, the default Envoy admin port in the sidecar that shares the pod network namespace.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+  namespace: demo
+  labels:
+    app: demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+        kuma.io/mesh: ${MESH_NAME}
+      annotations:
+        # demo-app calls no other service, so it reaches no backend (documented empty form).
+        # A workload that calls others lists refs with kind and the labels
+        # kuma.io/display-name and k8s.kuma.io/namespace.
+        kuma.io/reachable-backends: ""
+    spec:
+      serviceAccountName: demo-app
+      # No pod-level runAsNonRoot: without the CNI, the injected kuma-init container sets up transparent
+      # proxying and needs root. runAsNonRoot is on the demo-app container below.
+      # automountServiceAccountToken stays at its default: the Kong docs do not say the sidecar works
+      # without the mounted token, so the default stays until you have tested otherwise.
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: demo-app
+          image: ${DEMO_IMAGE}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ZONE
+              value: ${ZONE_NAME}
+            - name: SERVICE_NAME
+              value: demo-app
+            # The request page is served from a laptop on this fixed origin.
+            - name: ALLOWED_ORIGIN
+              value: http://localhost:8099
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

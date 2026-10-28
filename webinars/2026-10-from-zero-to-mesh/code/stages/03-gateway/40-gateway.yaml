@@ -1,0 +1,51 @@
+# The gateway, in zone 1 only. It is a delegated gateway: the mesh puts a sidecar next to it for
+# traffic that leaves the gateway, and traffic that arrives at the gateway skips the sidecar.
+# infrastructure.annotations reach both the Service and the pod (Operator 2.2 or later).
+#   traffic.kuma.io/exclude-inbound-ports  every port the gateway listens on, so the sidecar does not
+#                                          intercept incoming traffic (8000 and 8443 proxy, 8100
+#                                          status; confirm the list on the running pod)
+#   kuma.io/ignore                         the mesh creates no MeshService from the gateway's Service
+#   kuma.io/reachable-backends             the gateway sidecar may reach every MeshService in the
+#                                          demo namespace
+# Stage 07 swaps this file for patches/40-gateway-mzsvc.yaml and back.
+# Docs: https://developer.konghq.com/mesh/annotations/ and https://developer.konghq.com/mesh/delegated-gateways/
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-gateway
+  namespace: kong
+spec:
+  gatewayClassName: demo-gateway-class
+  infrastructure:
+    annotations:
+      traffic.kuma.io/exclude-inbound-ports: "8000,8443,8100"
+      kuma.io/ignore: "true"
+      kuma.io/reachable-backends: |
+        refs:
+        - kind: MeshService
+          labels:
+            k8s.kuma.io/namespace: demo
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: demo
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: demo-gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: demo

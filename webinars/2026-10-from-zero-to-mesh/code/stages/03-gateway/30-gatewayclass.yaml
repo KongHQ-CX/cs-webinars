@@ -1,0 +1,13 @@
+# Hands every Gateway of this class to Kong Operator, with the settings in demo-gateway-config.
+# Docs: https://developer.konghq.com/operator/dataplanes/how-to/preserve-client-ip/
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: demo-gateway-class
+spec:
+  controllerName: konghq.com/gateway-operator
+  parametersRef:
+    group: gateway-operator.konghq.com
+    kind: GatewayConfiguration
+    name: demo-gateway-config
+    namespace: kong

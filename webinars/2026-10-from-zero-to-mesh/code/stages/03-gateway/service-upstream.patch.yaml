@@ -1,0 +1,8 @@
+# Merge patch for the demo Service (stage 02 owns the Service, this stage adds one annotation).
+# With it, the Operator's Konnect gateway sends to the Service name instead of to pod addresses,
+# so the mesh sidecar chooses the pod. apply.sh applies it with kubectl patch.
+# Docs: https://developer.konghq.com/operator/changelog/ (the --enable-fqdn-mode flag is the
+# alternative if the annotation is not enough).
+metadata:
+  annotations:
+    ingress.kubernetes.io/service-upstream: "true"

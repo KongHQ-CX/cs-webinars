@@ -1,0 +1,19 @@
+# The certificate for the gateway name. cert-manager stores it in the Secret demo-gateway-tls in
+# namespace kong, which the HTTPS listener of the Gateway reads, and renews it before it expires.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: demo-gateway-tls
+  namespace: kong
+spec:
+  secretName: demo-gateway-tls
+  # Kong Operator reads only certificate Secrets that carry this label
+  # (https://developer.konghq.com/operator/dataplanes/how-to/cert-manager/).
+  secretTemplate:
+    labels:
+      konghq.com/secret: "true"
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-dns
+  dnsNames:
+    - __DNS_NAME__

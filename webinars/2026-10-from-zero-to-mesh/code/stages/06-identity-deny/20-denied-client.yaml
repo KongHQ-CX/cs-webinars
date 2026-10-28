@@ -1,0 +1,62 @@
+# A second caller that no allow rule admits. It runs the demo image (python3 is in it) and sleeps, so
+# a request can be sent from inside the pod with kubectl exec. It has its own ServiceAccount, so the
+# mesh gives it its own identity, different from the gateway's. The only allow rule names the
+# gateway's identity, so this caller is denied.
+# apply.sh fills DEMO_IMAGE (digest-pinned, from the environment) and MESH_NAME.
+# cleanup.sh deletes this file's objects.
+# The annotation lets the sidecar reach the demo-app MeshService: without it the sidecar would not
+# route the call, and the failure would not come from the deny rule.
+# Docs: https://developer.konghq.com/mesh/annotations/
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: denied-client
+  namespace: demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: denied-client
+  namespace: demo
+  labels:
+    app: denied-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: denied-client
+  template:
+    metadata:
+      labels:
+        app: denied-client
+        kuma.io/mesh: ${MESH_NAME}
+      annotations:
+        kuma.io/reachable-backends: |
+          refs:
+          - kind: MeshService
+            labels:
+              kuma.io/display-name: demo-app
+              k8s.kuma.io/namespace: demo
+    spec:
+      serviceAccountName: denied-client
+      # The process exits on SIGTERM, and the pod stops within 2 seconds when cleanup deletes it.
+      terminationGracePeriodSeconds: 2
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: denied-client
+          image: ${DEMO_IMAGE}
+          command: ["python3", "-I", "-c", "import signal, sys, time; signal.signal(signal.SIGTERM, lambda *a: sys.exit(0)); time.sleep(31536000)"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

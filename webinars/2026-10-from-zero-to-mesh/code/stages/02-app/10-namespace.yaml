@@ -1,0 +1,9 @@
+# Namespace for the demo app. The sidecar label must exist before any pod starts,
+# otherwise the pod runs without a sidecar. apply.sh fills MESH_NAME.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+  labels:
+    kuma.io/sidecar-injection: enabled
+    kuma.io/mesh: ${MESH_NAME}
