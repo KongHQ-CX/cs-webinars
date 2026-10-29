@@ -23,6 +23,11 @@ You remove the demo app from zone 1. The answers keep coming, now from zone 2.
    code/bin/apply-stage.sh 07
    ```
 
+   This change rolls the gateway pods, which ends the port-forward from step 4 (`error: lost
+   connection to pod`). Start it again in the second terminal, with the same command, as soon
+   as the new gateway pod is Ready. `30-revert-gateway-path.sh` in item 4 rolls the pods again,
+   so start it again after that too.
+
    Wait for the line `gateway warm after Ns` before you go on. The gateway needs a short time to settle after this change.
 
 2. Remove the demo app from zone 1.

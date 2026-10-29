@@ -9,7 +9,13 @@ You build the demo app image, then install Kong Mesh on each cluster. Each clust
 
 ## Do this
 
-1. Build the demo app image from the `demo-app/` folder. The Dockerfile has no default base image. Give it a Python slim image pinned by digest, which you read from your registry. The commands below use Docker. Any build tool works.
+1. Build the demo app image from the `demo-app/` folder. The Dockerfile has no default base image. Give it a Python slim image pinned by digest. Read the digest first:
+
+   ```
+   docker buildx imagetools inspect python:3.13.5-slim --format '{{.Manifest.Digest}}'
+   ```
+
+   The commands below use Docker. Any build tool works.
 
    ```
    docker build --build-arg BASE=python:3.13.5-slim@sha256:<digest> -t <your registry>/demo-app:1 demo-app/

@@ -28,7 +28,15 @@ It is safe to run twice.
 
 ## Remove everything
 
-- Delete a zone in Konnect before you delete its cluster.
+- Delete a zone in Konnect before you delete its cluster, and disconnect it first. Konnect
+  refuses a connected zone with 400 `zone "<name>" is still online. Disconnect the zone first`.
+  Remove the zone control plane, then delete the zone:
+
+  ```
+  helm uninstall kong-mesh -n kong-mesh-system --wait
+  curl -X DELETE "https://<geo>.api.konghq.com/v1/mesh/control-planes/<KONNECT_CP_ID>/api/zones/<zone name>" \
+    -H "Authorization: Bearer $KONNECT_TOKEN"
+  ```
 - Delete the Konnect objects you created in step 1 when you are finished, and revoke both tokens.
 
 ## Where to go next

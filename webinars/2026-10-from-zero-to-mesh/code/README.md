@@ -51,13 +51,15 @@ The setup checks that a `MeshIdentity` exists and never creates one. Create it o
 ```
 curl -X PUT "https://$KONNECT_REGION.api.konghq.com/v1/mesh/control-planes/$CONTROL_PLANE_ID/api/meshes/$MESH_NAME/meshidentities/identity" \
   -H "Authorization: Bearer $KONNECT_TOKEN" -H "Content-Type: application/json" \
-  --data '{"type":"MeshIdentity","name":"identity","spec":{"selector":{"dataplane":{"matchLabels":{}}},
+  --data '{"type":"MeshIdentity","mesh":"'"$MESH_NAME"'","name":"identity","spec":{"selector":{"dataplane":{"matchLabels":{}}},
     "spiffeID":{"trustDomain":"{{ .Mesh }}.{{ .Zone }}.mesh.local","path":"/ns/{{ .Namespace }}/sa/{{ .ServiceAccount }}"},
     "provider":{"type":"Bundled","bundled":{"meshTrustCreation":"Enabled","insecureAllowSelfSigned":true,
       "certificateParameters":{"expiry":"24h"},"autogenerate":{"enabled":true}}}}}'
 ```
 
 `stages/06-identity-deny/shown/meshidentity.yaml` shows the same object as YAML. The Mesh must have `meshServices.mode: Exclusive`.
+
+The `mesh` field in the body is required. Without it the API answers 400 `mesh from the URL has to be the same as in body`. The same holds for a hand-written `MeshMultiZoneService` PUT.
 
 ### Variables
 

@@ -47,7 +47,9 @@ You add one gateway in front of the demo app, on cluster 1 only. The Kong Operat
 
 - The Gateway is `Programmed`.
 - The gateway pods have their sidecar.
-- `GET /` through the gateway returns 200.
+- `GET /` through the gateway returns 200, or 403 `RBAC: access denied` while no
+  `MeshTrafficPermission` exists yet. `verify.sh` says so and passes. Step 5 adds the allow
+  rule, and the same check then reads 200.
 - Nothing under `/admin` is routed.
 
 ## What just happened
