@@ -1,0 +1,46 @@
+# DRAFT. The stage 03 gateway with one more reachable backend: the MeshMultiZoneService, so the
+# gateway sidecar may call it. Everything else matches stages/03-gateway/40-gateway.yaml.
+# 30-revert-gateway-path.sh applies the stage 03 file again to remove the extra entry.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-gateway
+  namespace: kong
+spec:
+  gatewayClassName: demo-gateway-class
+  infrastructure:
+    annotations:
+      traffic.kuma.io/exclude-inbound-ports: "8000,8443,8100"
+      kuma.io/ignore: "true"
+      kuma.io/reachable-backends: |
+        refs:
+        - kind: MeshService
+          labels:
+            k8s.kuma.io/namespace: demo
+        - kind: MeshMultiZoneService
+          labels:
+            kuma.io/display-name: demo-app
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: demo
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: demo-gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: demo

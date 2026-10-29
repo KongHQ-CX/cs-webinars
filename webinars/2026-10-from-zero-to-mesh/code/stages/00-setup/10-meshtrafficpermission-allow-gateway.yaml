@@ -1,0 +1,31 @@
+# Default deny holds once identity is on. This rule lets exactly one caller in: the gateway, named by
+# its exact SPIFFE ID (trust domain, namespace and ServiceAccount spelled out, no wildcard).
+# The rule does not target the gateway: a MeshTrafficPermission is not supported on a delegated
+# gateway, so the gateway is allowed as a caller of the demo app.
+# The label kuma.io/origin: zone marks a policy applied on a zone control plane. A 2.x zone control
+# plane rejects a policy in the system namespace without it.
+# Docs: https://developer.konghq.com/mesh/policies/meshtrafficpermission_experimental/ and
+#       https://developer.konghq.com/mesh/issue-identity-with-meshidentity/ and
+#       https://developer.konghq.com/mesh/version-specific-upgrade-notes/ (section on the origin label)
+# render-allow-rule.sh fills MESH_NAME and GATEWAY_SPIFFE_ID. Read the ID from the gateway pod's data plane:
+#   spiffe://<trust domain>/ns/<namespace>/sa/<ServiceAccount>
+# and check it against the DataplaneInsight before the first run.
+apiVersion: kuma.io/v1alpha1
+kind: MeshTrafficPermission
+metadata:
+  name: allow-gateway-to-demo-app
+  namespace: kong-mesh-system
+  labels:
+    kuma.io/mesh: ${MESH_NAME}
+    kuma.io/origin: zone
+spec:
+  targetRef:
+    kind: Dataplane
+    labels:
+      app: demo-app
+  rules:
+    - default:
+        allow:
+          - spiffeID:
+              type: Exact
+              value: ${GATEWAY_SPIFFE_ID}

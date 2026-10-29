@@ -1,0 +1,18 @@
+# Namespace for the gateway. The sidecar label must exist before the gateway pod starts,
+# otherwise the pod runs without a sidecar. apply.sh fills MESH_NAME.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kong
+  labels:
+    kuma.io/sidecar-injection: enabled
+    kuma.io/mesh: ${MESH_NAME}
+---
+# The gateway pod's own ServiceAccount. Without it the Operator's pod runs as `default` (seen on the
+# first live run, 2026-10-19), and the stage 00 allow rule refuses `default` because it would admit
+# every pod that runs as `default`. 20-gatewayconfiguration.yaml sets serviceAccountName to this name.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-gateway
+  namespace: kong

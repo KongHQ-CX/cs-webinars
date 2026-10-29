@@ -1,0 +1,24 @@
+# Let's Encrypt through the Cloudflare DNS API (DNS-01). A load balancer firewall that admits only
+# some addresses blocks the HTTP-01 check from Let's Encrypt, so the challenge uses DNS.
+# bin/install-cert-manager.sh fills the three placeholders. The token Secret is created from the
+# environment on stdin (never in this repo): name cloudflare-api-token, key api-token, namespace
+# cert-manager (the ClusterIssuer reads Secrets from there).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns
+spec:
+  acme:
+    server: __ACME_SERVER__
+    email: __TLS_EMAIL__
+    privateKeySecretRef:
+      name: letsencrypt-dns-account
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+        selector:
+          dnsZones:
+            - __DNS_ZONE__

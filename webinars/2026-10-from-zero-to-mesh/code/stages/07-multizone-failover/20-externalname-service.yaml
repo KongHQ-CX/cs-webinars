@@ -1,0 +1,18 @@
+# DRAFT, the path is not yet observed on a cluster. A Service that points at the
+# MeshMultiZoneService hostname, so the gateway route can name a Service. The Kong delegated
+# gateway docs suggest an ExternalName Service for multi-zone traffic.
+# Docs: https://developer.konghq.com/mesh/delegated-gateways/ and https://developer.konghq.com/mesh/meshmultizoneservice/
+# If the Operator skips ExternalName Services, the route needs a different backend. Check
+# that on your cluster before you rely on this file.
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-multizone
+  namespace: demo
+spec:
+  type: ExternalName
+  externalName: demo-app.mzsvc.mesh.local
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP

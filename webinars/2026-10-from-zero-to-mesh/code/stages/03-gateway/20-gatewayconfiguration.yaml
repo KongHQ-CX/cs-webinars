@@ -1,0 +1,39 @@
+# Settings for the gateway the Operator builds: the Konnect control plane it joins (an existing
+# one, by ID, which the Operator mirrors), the image, and the Service that exposes it.
+# apply.sh fills INGRESS_TYPE: LoadBalancer when EDGE_CONTROL_ACK=1 (the load balancer firewall is in
+# place), else ClusterIP, which exposes nothing. The externalTrafficPolicy line is dropped for ClusterIP
+# because the CRD rejects it there. Local keeps the client address, so the firewall sees who is calling.
+# GatewayConfiguration v2beta1 has no source range field. Its ingress options are annotations,
+# externalTrafficPolicy, internalTrafficPolicy, labels, name, trafficDistribution and type. Who can
+# reach the gateway is the load balancer firewall, set outside this file. A NetworkPolicy cannot narrow
+# it: the Operator makes its own policy for the gateway pods with open proxy and metrics rules.
+# apply.sh applies this file before the Gateway (40-gateway.yaml), reads externalTrafficPolicy back, and
+# after the Gateway is Programmed reads the live Service again.
+# Docs: https://developer.konghq.com/operator/get-started/gateway-api/deploy-gateway/
+# apply.sh fills GATEWAY_CP_ID and GATEWAY_IMAGE (pinned to a patch version).
+apiVersion: gateway-operator.konghq.com/v2beta1
+kind: GatewayConfiguration
+metadata:
+  name: demo-gateway-config
+  namespace: kong
+spec:
+  konnect:
+    authRef:
+      name: konnect-api-auth
+    source: Mirror
+    mirror:
+      konnect:
+        id: "${GATEWAY_CP_ID}"
+  dataPlaneOptions:
+    deployment:
+      podTemplateSpec:
+        spec:
+          serviceAccountName: demo-gateway
+          containers:
+            - name: proxy
+              image: ${GATEWAY_IMAGE}
+    network:
+      services:
+        ingress:
+          type: ${INGRESS_TYPE}
+          externalTrafficPolicy: Local

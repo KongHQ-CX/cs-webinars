@@ -1,0 +1,44 @@
+# Helm values for a Kong Mesh zone control plane that joins a Konnect-hosted global control plane.
+# bin/install-zone.sh fills the upper-case markers below and passes the result to helm with -f.
+# String values are quoted so a name made only of digits stays a string.
+# Chart: kong-mesh/kong-mesh (https://kong.github.io/kong-mesh-charts), pinned by the script.
+#
+# Sources:
+#   zone join values   https://developer.konghq.com/mesh/configure-mesh-global-control-plane-on-kubernetes-with-konnect-api/
+#   zone proxies       https://developer.konghq.com/mesh/zone-proxies/
+#   unified naming     https://developer.konghq.com/mesh/progressively-roll-out-unified-resource-naming/
+#
+# Zone proxies are mesh-scoped: they come from kuma.meshes[], not from a top-level ingress or egress block.
+kuma:
+  controlPlane:
+    mode: zone
+    zone: "${ZONE_NAME}"
+    kdsGlobalAddress: "${KDS_GLOBAL_ADDRESS}"
+    konnect:
+      cpId: "${KONNECT_CP_ID}"
+    # The zone token is read from a Kubernetes Secret you create before the install.
+    secrets:
+      - Env: KMESH_MULTIZONE_ZONE_KDS_AUTH_CP_TOKEN_INLINE
+        Secret: "${ZONE_SECRET_NAME}"
+        Key: "${SECRET_KEY}"
+  dataPlane:
+    features:
+      unifiedResourceNaming: true
+  meshes:
+    - name: "${MESH_NAME}"
+      ingress:
+        enabled: true
+        service:
+          type: LoadBalancer
+          # Only the other cluster (or your own address on one cluster) may reach the zone ingress.
+          # The per-mesh service block has no loadBalancerSourceRanges key of its own: extra Service
+          # fields go under `spec`, which the chart merges into the Service spec (chart 2.14.6
+          # values.yaml, kuma.meshes[].ingress.service.spec). A key placed directly under `service`
+          # is dropped silently, which the render check in install-zone.sh caught on 2026-10-19.
+          spec:
+            loadBalancerSourceRanges: ${SOURCE_RANGES}
+      # The docs do not show an egress Service setting, so none is set here. install-zone.sh
+      # renders the chart first and refuses to install if the egress Service is a LoadBalancer
+      # without these same source ranges.
+      egress:
+        enabled: true

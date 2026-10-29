@@ -1,0 +1,24 @@
+# DRAFT. The stage 03 route, still GET / only, with the backend moved to the Service that points at
+# the MeshMultiZoneService hostname. 30-revert-gateway-path.sh applies the stage 03 route again.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: demo-app
+  namespace: demo
+spec:
+  parentRefs:
+    - name: demo-gateway
+      namespace: kong
+      sectionName: http
+    - name: demo-gateway
+      namespace: kong
+      sectionName: https
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /
+          method: GET
+      backendRefs:
+        - name: demo-app-multizone
+          port: 80

@@ -1,0 +1,32 @@
+# Retry failed calls to the demo app: up to 3 more attempts when the answer is a 503, so 4 attempts
+# in total. With 50 percent failure, a request still fails about 6 percent of the time (0.5 to the
+# power of 4).
+# Policy shape: targetRef Mesh picks every proxy, `to` picks the destination by labels. The policy
+# lives in the system namespace with the mesh label, so it applies mesh-wide.
+# The label kuma.io/origin: zone marks a policy applied on a zone control plane. A 2.x zone control
+# plane rejects a policy in the system namespace without it.
+# Docs: https://developer.konghq.com/mesh/policies/meshretry/ and
+#       https://developer.konghq.com/mesh/version-specific-upgrade-notes/ (section on the origin label)
+# apply.sh fills MESH_NAME.
+apiVersion: kuma.io/v1alpha1
+kind: MeshRetry
+metadata:
+  name: demo-app-retry
+  namespace: kong-mesh-system
+  labels:
+    kuma.io/mesh: ${MESH_NAME}
+    kuma.io/origin: zone
+spec:
+  targetRef:
+    kind: Mesh
+  to:
+    - targetRef:
+        kind: MeshService
+        labels:
+          kuma.io/display-name: demo-app
+          k8s.kuma.io/namespace: demo
+      default:
+        http:
+          numRetries: 3
+          retryOn:
+            - "503"

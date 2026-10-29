@@ -1,0 +1,2 @@
+# Your filled-in copy of .env.example holds account ids and image paths. Keep it out of git.
+.env

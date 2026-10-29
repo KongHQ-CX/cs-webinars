@@ -1,0 +1,4 @@
+# cert-manager values for the gateway cluster (zone 1). The chart installs its own CRDs with this flag.
+# The Certificate and the ClusterIssuer live in tls/, and bin/install-cert-manager.sh applies them.
+crds:
+  enabled: true

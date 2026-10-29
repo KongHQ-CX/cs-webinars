@@ -1,0 +1,18 @@
+# The Service the gateway route and the MeshMultiZoneService reach. Name and namespace are fixed:
+# demo-app in demo. Only port 80 (target 8080) is published. The admin port is not in this Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app
+  namespace: demo
+  labels:
+    app: demo-app
+spec:
+  selector:
+    app: demo-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+      appProtocol: http
