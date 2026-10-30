@@ -38,6 +38,9 @@ It is safe to run twice.
     -H "Authorization: Bearer $KONNECT_TOKEN"
   ```
 - Delete the Konnect objects you created in step 1 when you are finished, and revoke both tokens.
+  Konnect refuses to delete a mesh while data planes are still attached to it, so remove the
+  zones and their data planes first. Deleting a mesh control plane also removes its zones and
+  its mesh, so you can delete the control plane once every zone is offline.
 
 ## Where to go next
 
