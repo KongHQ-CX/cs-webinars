@@ -11,7 +11,7 @@ You set every value yourself. Each value you must supply is written `__REPLACE_M
 | `tutorial/` | Nine short steps, from an empty Konnect account to a working mesh. Start with `tutorial/01-set-up-konnect.md` |
 | `code/` | Helm values, manifests, and the scripts that install and demonstrate each step. `code/README.md` lists every script |
 | `demo-app/` | The small web service the demo calls: `src/server.py`, `src/adminctl.py` and a Dockerfile. You build and push its image in tutorial step 2 |
-| `From-Zero-to-Mesh-Webinar.pdf` | The slide deck from the session |
+| `From-Zero-to-Mesh-Webinar.pdf` | The slide deck from the session. [Watch the recording](https://konghq.com/events/webinars/from-zero-to-mesh-secure-resilient-traffic-between-your-services-with-kong-mesh) |
 | `.env.example` | Every variable the scripts read except tokens, with `__REPLACE_ME__` for each value you supply. Tokens you enter with `read -rs` |
 
 ## What you need
