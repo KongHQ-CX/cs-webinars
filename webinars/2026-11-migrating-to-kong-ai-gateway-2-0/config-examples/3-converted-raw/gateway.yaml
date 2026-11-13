@@ -1,0 +1,9 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-23
+ai_gateways:
+  - ref: aigw-migration-23
+    name: aigw-migration-23
+    display_name: AI Gateway 2.3 (migrated from Kong Gateway 3.16)
+    description: Migrated from Kong Gateway 3.x control plane aigw-migration-316
+    min_runtime_version: "2.3"

@@ -1,0 +1,242 @@
+# Kong Gateway 3.16: the "before" AI configuration for the migration demo (customer-neutral).
+#
+# What a typical 3.x AI estate looks like:
+#   - three providers: OpenAI, Amazon Bedrock (Anthropic Claude), Google Vertex AI (Gemini)
+#   - several API formats: OpenAI chat / responses / embeddings, native Anthropic Messages, native Gemini
+#   - one ai-proxy-advanced per route, the provider credential repeated on each one
+#   - applications authenticate with API keys (key-auth on every route): apikey header, or the header the
+#     native SDKs send (x-api-key for Anthropic, x-goog-api-key for Gemini); no key -> 401
+#   - each application is a consumer in one tier = consumer group gold / silver / bronze, each with its own
+#     ai-rate-limiting-advanced token budget, written in the `policies` format (3.14+; `llm_providers` is
+#     deprecated): one rule per provider, partitioned by provider and by consumer = one budget per consumer.
+#     The AI Gateway 2.x converter copies these rules 1:1, so the migrated tiers keep the same semantics.
+#
+# Secrets are never in this file: decK fills them from the environment when it pushes the config
+#   DECK_OPENAI_AUTH, DECK_BEDROCK_AUTH   full Authorization header values ("Bearer ...")
+#   DECK_GCP_SA_JSON                      Vertex service-account key as ONE line of JSON (jq -c . key.json)
+#   DECK_KEY_APP_*                        consumer API keys;  DECK_GCP_PROJECT / DECK_GCP_LOCATION
+# They are stored in Konnect with the plugin config, so the data plane needs no extra settings.
+# (In production prefer a vault reference such as {vault://...}; it works the same way after migration.)
+_format_version: "3.0"
+_info:
+  select_tags: [aigw-migration]
+
+# ---------------------------------------------------------------- tiers
+consumer_groups:
+  - name: gold
+    plugins:
+      - name: ai-rate-limiting-advanced
+        config:
+          tokens_count_strategy: total_tokens
+          strategy: local
+          policies:
+            - match:
+                - {type: provider, values: [openai], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 50000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [bedrock], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 50000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [gemini], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 50000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+          error_message: "Gold tier: AI token budget per minute used up."
+  - name: silver
+    plugins:
+      - name: ai-rate-limiting-advanced
+        config:
+          tokens_count_strategy: total_tokens
+          strategy: local
+          policies:
+            - match:
+                - {type: provider, values: [openai], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 5000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [bedrock], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 5000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [gemini], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 5000, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+          error_message: "Silver tier: AI token budget per minute used up."
+  - name: bronze
+    plugins:
+      - name: ai-rate-limiting-advanced
+        config:
+          tokens_count_strategy: total_tokens
+          strategy: local
+          policies:
+            - match:
+                - {type: provider, values: [openai], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 300, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [bedrock], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 300, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+            - match:
+                - {type: provider, values: [gemini], partition_by: true}
+                - {type: consumer, partition_by: true}      # one budget per consumer (was identifier: consumer)
+              limits: [{limit: 300, window_size: 60, tokens_count_strategy: total_tokens}]
+              window_type: sliding
+          error_message: "Bronze tier: AI token budget per minute used up. Ask the AI platform team for an upgrade."
+
+# ---------------------------------------------------------------- applications (API keys)
+consumers:
+  - username: app-reporting
+    custom_id: app-reporting
+    groups: [{name: gold}]
+    keyauth_credentials:
+      - key: ${{ env "DECK_KEY_APP_REPORTING" }}
+  - username: app-chatbot
+    custom_id: app-chatbot
+    groups: [{name: silver}]
+    keyauth_credentials:
+      - key: ${{ env "DECK_KEY_APP_CHATBOT" }}
+  - username: app-batch
+    custom_id: app-batch
+    groups: [{name: bronze}]
+    keyauth_credentials:
+      - key: ${{ env "DECK_KEY_APP_BATCH" }}
+  - username: app-etl
+    custom_id: app-etl
+    groups: [{name: bronze}]
+    keyauth_credentials:
+      - key: ${{ env "DECK_KEY_APP_ETL" }}
+
+# ---------------------------------------------------------------- authentication (every route)
+plugins:
+  - name: key-auth
+    config:
+      key_names: [apikey, x-api-key, x-goog-api-key]
+      hide_credentials: true      # the client's Kong key never reaches the LLM provider
+
+# ---------------------------------------------------------------- providers and APIs
+services:
+  # ---------- OpenAI
+  - name: openai
+    url: http://localhost:32000
+    routes:
+      - name: openai-chat
+        paths: [/openai/v1/chat/completions]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              targets:
+                - route_type: llm/v1/chat
+                  auth: {header_name: Authorization, header_value: '${{ env "DECK_OPENAI_AUTH" }}'}
+                  model: {provider: openai, name: gpt-5-mini}
+                  logging: {log_statistics: true, log_payloads: false}
+      - name: openai-responses
+        paths: [/openai/v1/responses]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              targets:
+                - route_type: llm/v1/responses
+                  auth: {header_name: Authorization, header_value: '${{ env "DECK_OPENAI_AUTH" }}'}
+                  model: {provider: openai, name: gpt-5-mini}
+                  logging: {log_statistics: true, log_payloads: false}
+      - name: openai-embeddings
+        paths: [/openai/v1/embeddings]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              genai_category: text/embeddings
+              targets:
+                - route_type: llm/v1/embeddings
+                  auth: {header_name: Authorization, header_value: '${{ env "DECK_OPENAI_AUTH" }}'}
+                  model: {provider: openai, name: text-embedding-3-small}
+                  logging: {log_statistics: true, log_payloads: false}
+
+  # ---------- Amazon Bedrock (Anthropic Claude), Bedrock API key
+  - name: bedrock
+    url: http://localhost:32000
+    routes:
+      # OpenAI-compatible chat in front of Claude on Bedrock
+      - name: bedrock-claude-chat
+        paths: [/bedrock/v1/chat/completions]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              targets:
+                - route_type: llm/v1/chat
+                  auth: {header_name: Authorization, header_value: '${{ env "DECK_BEDROCK_AUTH" }}'}
+                  model:
+                    provider: bedrock
+                    name: us.anthropic.claude-haiku-4-5-20251001-v1:0
+                    options: {bedrock: {aws_region: us-east-1}}
+                  logging: {log_statistics: true, log_payloads: false}
+      # Native Anthropic Messages API (Anthropic SDK, Claude Code): POST /anthropic/v1/messages
+      - name: anthropic-messages
+        paths: [/anthropic]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              llm_format: anthropic
+              targets:
+                - route_type: llm/v1/chat
+                  auth: {header_name: Authorization, header_value: '${{ env "DECK_BEDROCK_AUTH" }}'}
+                  model:
+                    provider: bedrock
+                    name: us.anthropic.claude-haiku-4-5-20251001-v1:0
+                    options: {bedrock: {aws_region: us-east-1}}
+                  logging: {log_statistics: true, log_payloads: false}
+
+  # ---------- Google Vertex AI (Gemini), service account
+  - name: vertex
+    url: http://localhost:32000
+    routes:
+      # OpenAI-compatible chat in front of Gemini on Vertex AI
+      - name: vertex-gemini-chat
+        paths: [/vertex/v1/chat/completions]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              targets:
+                - route_type: llm/v1/chat
+                  auth: &gcp {gcp_use_service_account: true, gcp_service_account_json: '${{ env "DECK_GCP_SA_JSON" }}'}
+                  model:
+                    provider: gemini
+                    name: gemini-2.5-flash
+                    options: &vertex
+                      gemini:
+                        api_endpoint: ${{ env "DECK_GCP_LOCATION" }}-aiplatform.googleapis.com
+                        project_id: ${{ env "DECK_GCP_PROJECT" }}
+                        location_id: ${{ env "DECK_GCP_LOCATION" }}
+                  logging: {log_statistics: true, log_payloads: false}
+      - name: vertex-embeddings
+        paths: [/vertex/v1/embeddings]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              genai_category: text/embeddings
+              targets:
+                - route_type: llm/v1/embeddings
+                  auth: *gcp
+                  model: {provider: gemini, name: gemini-embedding-001, options: *vertex}
+                  logging: {log_statistics: true, log_payloads: false}
+      # Native Gemini API (google-genai SDK): POST /gemini/v1beta/models/<model>:generateContent
+      - name: gemini-native
+        paths: [/gemini]
+        plugins:
+          - name: ai-proxy-advanced
+            config:
+              llm_format: gemini
+              targets:
+                - route_type: llm/v1/chat
+                  auth: *gcp
+                  model: {provider: gemini, name: gemini-2.5-flash, options: *vertex}
+                  logging: {log_statistics: true, log_payloads: false}

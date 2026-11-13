@@ -1,0 +1,422 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-models
+ai_gateway_models:
+  - ref: anthropic-messages
+    type: model
+    display_name: anthropic-messages
+    name: anthropic-messages
+    capabilities:
+      - generate
+    formats:
+      - type: anthropic
+    targets:
+      - name: us.anthropic.claude-haiku-4-5-20251001-v1:0
+        weight: 100
+        allow_auth_override: false
+        provider: bedrock-1
+        config:
+          embeddings_normalize: false
+          region: us-east-1
+          type: bedrock
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /anthropic
+        protocols:
+          - http
+          - https
+        strip_path: true
+        preserve_host: false
+        https_redirect_status_code: 426
+        regex_priority: 0
+        request_buffering: true
+        response_buffering: true
+        model:
+          body_param: model
+          values:
+            - us.anthropic.claude-haiku-4-5-20251001-v1:0
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: bedrock-claude-chat
+    type: model
+    display_name: bedrock-claude-chat
+    name: bedrock-claude-chat
+    capabilities:
+      - generate
+    formats:
+      - type: openai
+    targets:
+      - name: us.anthropic.claude-haiku-4-5-20251001-v1:0
+        weight: 100
+        allow_auth_override: false
+        provider: bedrock-1
+        config:
+          embeddings_normalize: false
+          region: us-east-1
+          type: bedrock
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /bedrock/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - us.anthropic.claude-haiku-4-5-20251001-v1:0
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: openai-chat
+    type: model
+    display_name: openai-chat
+    name: openai-chat
+    capabilities:
+      - generate
+    formats:
+      - type: openai
+    targets:
+      - name: gpt-5-mini
+        weight: 100
+        allow_auth_override: false
+        provider: openai-1
+        config:
+          type: openai
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /openai/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - gpt-5-mini
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: openai-embeddings
+    type: model
+    display_name: openai-embeddings
+    name: openai-embeddings
+    capabilities:
+      - embeddings
+    formats:
+      - type: openai
+    targets:
+      - name: text-embedding-3-small
+        weight: 100
+        allow_auth_override: false
+        provider: openai-1
+        config:
+          type: openai
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /openai/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - text-embedding-3-small
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: openai-responses
+    type: model
+    display_name: openai-responses
+    name: openai-responses
+    capabilities:
+      - agentic
+    formats:
+      - type: openai
+    targets:
+      - name: gpt-5-mini
+        weight: 100
+        allow_auth_override: false
+        provider: openai-1
+        config:
+          type: openai
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /openai/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - gpt-5-mini
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: gemini-native
+    type: model
+    display_name: gemini-native
+    name: gemini-native
+    capabilities:
+      - generate
+    formats:
+      - type: gemini
+    targets:
+      - name: gemini-2.5-flash
+        weight: 100
+        allow_auth_override: false
+        provider: gemini-1
+        config:
+          gcp_environment:
+            api_endpoint: us-central1-aiplatform.googleapis.com
+            location_id: us-central1
+            project_id: my-gcp-project
+          type: gemini
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /gemini
+        protocols:
+          - http
+          - https
+        strip_path: true
+        preserve_host: false
+        https_redirect_status_code: 426
+        regex_priority: 0
+        request_buffering: true
+        response_buffering: true
+        model:
+          path_param: model_name
+          values:
+            - gemini-2.5-flash
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: vertex-embeddings
+    type: model
+    display_name: vertex-embeddings
+    name: vertex-embeddings
+    capabilities:
+      - embeddings
+    formats:
+      - type: openai
+    targets:
+      - name: gemini-embedding-001
+        weight: 100
+        allow_auth_override: false
+        provider: gemini-1
+        config:
+          gcp_environment:
+            api_endpoint: us-central1-aiplatform.googleapis.com
+            location_id: us-central1
+            project_id: my-gcp-project
+          type: gemini
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /vertex/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - gemini-embedding-001
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: vertex-gemini-chat
+    type: model
+    display_name: vertex-gemini-chat
+    name: vertex-gemini-chat
+    capabilities:
+      - generate
+    formats:
+      - type: openai
+    targets:
+      - name: gemini-2.5-flash
+        weight: 100
+        allow_auth_override: false
+        provider: gemini-1
+        config:
+          gcp_environment:
+            api_endpoint: us-central1-aiplatform.googleapis.com
+            location_id: us-central1
+            project_id: my-gcp-project
+          type: gemini
+    access:
+      auth_strategies:
+        - api-key
+    config:
+      route:
+        paths:
+          - /vertex/v1
+        protocols:
+          - http
+          - https
+        https_redirect_status_code: 426
+        model:
+          body_param: model
+          values:
+            - gemini-2.5-flash
+      logging:
+        payloads: false
+      response_streaming: allow
+      max_request_body_size: 8192
+      model:
+        name_header: true
+      balancer:
+        algorithm: round-robin
+        connect_timeout: 60000
+        fail_timeout: 10000
+        failover_criteria:
+          - error
+          - timeout
+        max_fails: 0
+        read_timeout: 60000
+        retries: 5
+        slots: 10000
+        write_timeout: 60000
+    ai_gateway: !ref aigw-migration-23#id

@@ -1,0 +1,13 @@
+# Converter input: the global 3.16 key-auth plugin becomes ONE AI Gateway auth strategy on every model.
+# Same key names as the 3.16 plugin, so clients keep sending the same header; existing keys are kept.
+auth_strategies:
+  - ref: api-key
+    name: api-key
+    display_name: API key
+    type: key-auth
+    config:
+      key_names: [apikey, x-api-key, x-goog-api-key]
+      hide_credentials: true
+      key_in_header: true
+      key_in_query: true
+    models: ['*']

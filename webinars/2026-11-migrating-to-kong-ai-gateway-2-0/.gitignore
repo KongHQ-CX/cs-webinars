@@ -1,0 +1,7 @@
+# Your filled-in copy of .env.example, and anything the runbook writes with secrets in it
+.env
+secrets/
+01-dump/
+02-converted/
+plan.json
+.DS_Store

@@ -1,0 +1,17 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-auth-strategies
+ai_gateway_auth_strategies:
+  - ref: api-key
+    type: key-auth
+    display_name: API key
+    name: api-key
+    config:
+      hide_credentials: true
+      key_in_header: true
+      key_in_query: true
+      key_names:
+        - apikey
+        - x-api-key
+        - x-goog-api-key
+    ai_gateway: !ref aigw-migration-23#id
