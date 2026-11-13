@@ -1,0 +1,38 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-model-providers
+ai_gateway_model_providers:
+  - ref: bedrock-1
+    type: bedrock
+    display_name: bedrock-1
+    name: bedrock-1
+    config:
+      auth:
+        type: basic
+        headers:
+          - name: Authorization
+            # the converter copies the full header value from the dump here, in clear text
+            value: Bearer __REPLACE_ME__
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: openai-1
+    type: openai
+    display_name: openai-1
+    name: openai-1
+    config:
+      auth:
+        type: basic
+        headers:
+          - name: Authorization
+            # the converter copies the full header value from the dump here, in clear text
+            value: Bearer __REPLACE_ME__
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: gemini-1
+    type: gemini
+    display_name: gemini-1
+    name: gemini-1
+    config:
+      auth:
+        type: gcp
+        # the converter copies the Vertex service-account key (JSON) from the dump here, in clear text
+        service_account_json: __REPLACE_ME__
+    ai_gateway: !ref aigw-migration-23#id

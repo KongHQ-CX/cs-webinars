@@ -1,0 +1,235 @@
+{
+  "source": "kong",
+  "out_dir": "02-converted",
+  "version": "dev",
+  "routes": [
+    {
+      "service": "bedrock",
+      "route": "anthropic-messages",
+      "kind": "model",
+      "entity": "anthropic-messages",
+      "old_paths": [
+        "/anthropic"
+      ],
+      "new_paths": [
+        "/anthropic/v1/messages"
+      ],
+      "old_body_model": [
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+      ],
+      "new_body_model": "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    },
+    {
+      "service": "bedrock",
+      "route": "bedrock-claude-chat",
+      "kind": "model",
+      "entity": "bedrock-claude-chat",
+      "old_paths": [
+        "/bedrock/v1/chat/completions"
+      ],
+      "new_paths": [
+        "/bedrock/v1/chat/completions"
+      ],
+      "old_body_model": [
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+      ],
+      "new_body_model": "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    },
+    {
+      "service": "openai",
+      "route": "openai-chat",
+      "kind": "model",
+      "entity": "openai-chat",
+      "old_paths": [
+        "/openai/v1/chat/completions"
+      ],
+      "new_paths": [
+        "/openai/v1/chat/completions"
+      ],
+      "old_body_model": [
+        "gpt-5-mini"
+      ],
+      "new_body_model": "gpt-5-mini"
+    },
+    {
+      "service": "openai",
+      "route": "openai-embeddings",
+      "kind": "model",
+      "entity": "openai-embeddings",
+      "old_paths": [
+        "/openai/v1/embeddings"
+      ],
+      "new_paths": [
+        "/openai/v1/embeddings"
+      ],
+      "old_body_model": [
+        "text-embedding-3-small"
+      ],
+      "new_body_model": "text-embedding-3-small"
+    },
+    {
+      "service": "openai",
+      "route": "openai-responses",
+      "kind": "model",
+      "entity": "openai-responses",
+      "old_paths": [
+        "/openai/v1/responses"
+      ],
+      "new_paths": [
+        "/openai/v1/responses"
+      ],
+      "old_body_model": [
+        "gpt-5-mini"
+      ],
+      "new_body_model": "gpt-5-mini"
+    },
+    {
+      "service": "vertex",
+      "route": "gemini-native",
+      "kind": "model",
+      "entity": "gemini-native",
+      "old_paths": [
+        "/gemini"
+      ],
+      "new_paths": [
+        "/gemini/v1beta/models/(?\u003cmodel_name\u003e[^:/]+):(?:generateContent|streamGenerateContent)"
+      ],
+      "selector_path": "model_name",
+      "old_body_model": [
+        "gemini-2.5-flash"
+      ],
+      "new_body_model": "gemini-2.5-flash"
+    },
+    {
+      "service": "vertex",
+      "route": "vertex-embeddings",
+      "kind": "model",
+      "entity": "vertex-embeddings",
+      "old_paths": [
+        "/vertex/v1/embeddings"
+      ],
+      "new_paths": [
+        "/vertex/v1/embeddings"
+      ],
+      "old_body_model": [
+        "gemini-embedding-001"
+      ],
+      "new_body_model": "gemini-embedding-001"
+    },
+    {
+      "service": "vertex",
+      "route": "vertex-gemini-chat",
+      "kind": "model",
+      "entity": "vertex-gemini-chat",
+      "old_paths": [
+        "/vertex/v1/chat/completions"
+      ],
+      "new_paths": [
+        "/vertex/v1/chat/completions"
+      ],
+      "old_body_model": [
+        "gemini-2.5-flash"
+      ],
+      "new_body_model": "gemini-2.5-flash"
+    }
+  ],
+  "findings": [
+    {
+      "code": "global-plugin-dropped",
+      "severity": "warn",
+      "kind": "global",
+      "entity": "key-auth",
+      "message": "globally scoped key-auth authenticated every route on 1.x; AI Gateway 2.x authenticates per entity, so it was dropped",
+      "action": "list every migrated entity under an auth strategy in config/auth_strategies.yaml"
+    },
+    {
+      "code": "ssl-verify-forced",
+      "severity": "warn",
+      "kind": "policy",
+      "entity": "ai-rate-limiting-advanced",
+      "message": "config.redis.ssl_verify was false or null; forced to true because the AI Gateway 2.x data plane rejects a configuration that disables TLS verification",
+      "action": "install the upstream CA on the 2.x data planes; the data plane rejects the whole configuration (serving 404 on every route) when any entity disables TLS verification"
+    },
+    {
+      "code": "field-dropped",
+      "severity": "info",
+      "kind": "policy",
+      "entity": "ai-rate-limiting-advanced",
+      "message": "config fields llm_format are not part of the AI Gateway 2.x ai-rate-limiting-advanced schema, which rejects them; dropped",
+      "action": "check that the setting was a default; if it was not, the policy behaves differently on 2.x"
+    },
+    {
+      "code": "field-dropped",
+      "severity": "info",
+      "kind": "policy",
+      "entity": "ai-rate-limiting-advanced-2",
+      "message": "config fields llm_format are not part of the AI Gateway 2.x ai-rate-limiting-advanced schema, which rejects them; dropped",
+      "action": "check that the setting was a default; if it was not, the policy behaves differently on 2.x"
+    },
+    {
+      "code": "field-dropped",
+      "severity": "info",
+      "kind": "policy",
+      "entity": "ai-rate-limiting-advanced-3",
+      "message": "config fields llm_format are not part of the AI Gateway 2.x ai-rate-limiting-advanced schema, which rejects them; dropped",
+      "action": "check that the setting was a default; if it was not, the policy behaves differently on 2.x"
+    },
+    {
+      "code": "credential-secret-scaffold",
+      "severity": "warn",
+      "kind": "consumer",
+      "entity": "app-batch",
+      "message": "api key migrated as an environment reference (AIGW_APIKEY_APP_BATCH); without it the gateway would generate a new key and every existing client would break",
+      "action": "supply the value through the generated secrets.env before applying"
+    },
+    {
+      "code": "credential-secret-scaffold",
+      "severity": "warn",
+      "kind": "consumer",
+      "entity": "app-chatbot",
+      "message": "api key migrated as an environment reference (AIGW_APIKEY_APP_CHATBOT); without it the gateway would generate a new key and every existing client would break",
+      "action": "supply the value through the generated secrets.env before applying"
+    },
+    {
+      "code": "credential-secret-scaffold",
+      "severity": "warn",
+      "kind": "consumer",
+      "entity": "app-etl",
+      "message": "api key migrated as an environment reference (AIGW_APIKEY_APP_ETL); without it the gateway would generate a new key and every existing client would break",
+      "action": "supply the value through the generated secrets.env before applying"
+    },
+    {
+      "code": "credential-secret-scaffold",
+      "severity": "warn",
+      "kind": "consumer",
+      "entity": "app-reporting",
+      "message": "api key migrated as an environment reference (AIGW_APIKEY_APP_REPORTING); without it the gateway would generate a new key and every existing client would break",
+      "action": "supply the value through the generated secrets.env before applying"
+    },
+    {
+      "code": "route-fields-dropped",
+      "severity": "info",
+      "kind": "route",
+      "message": "route tags aigw-migration were not migrated: the AI Gateway accepts config.route.tags but does not store them, so every later plan would show a change",
+      "action": "carry anything you filter on as entity labels instead"
+    }
+  ],
+  "secrets": [
+    {
+      "env": "AIGW_APIKEY_APP_BATCH",
+      "field": "consumer app-batch api_key"
+    },
+    {
+      "env": "AIGW_APIKEY_APP_CHATBOT",
+      "field": "consumer app-chatbot api_key"
+    },
+    {
+      "env": "AIGW_APIKEY_APP_ETL",
+      "field": "consumer app-etl api_key"
+    },
+    {
+      "env": "AIGW_APIKEY_APP_REPORTING",
+      "field": "consumer app-reporting api_key"
+    }
+  ]
+}

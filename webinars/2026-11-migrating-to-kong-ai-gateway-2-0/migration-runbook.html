@@ -1,0 +1,579 @@
+<meta charset="utf-8">
+<title>AI Gateway 2.x Migration Runbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Sticky left rail (your settings + step index), step-by-step runbook on the right; one column on phones. */
+:root{
+  --bg:#f6f7f5; --panel:#ffffff; --fg:#17201c; --muted:#5d6a63; --line:#d9dfdb;
+  --accent:#0f6b52; --accent-soft:#e3f1ec; --code:#0f1714; --code-fg:#dbe7e1; --out:#eef1ef; --out-fg:#24302b;
+  --warn-bg:#fff5dc; --warn-line:#e2c37a; --ok:#1d7a4c;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1412; --panel:#161d1a; --fg:#e4ece8; --muted:#94a39b; --line:#2a3530;
+  --accent:#4fc39c; --accent-soft:#18302a; --code:#080c0a; --code-fg:#cfe0d8; --out:#1b2420; --out-fg:#c9d6cf;
+  --warn-bg:#2b2614; --warn-line:#7a6531; --ok:#5fd39a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --panel:#161d1a; --fg:#e4ece8; --muted:#94a39b; --line:#2a3530;
+  --accent:#4fc39c; --accent-soft:#18302a; --code:#080c0a; --code-fg:#cfe0d8; --out:#1b2420; --out-fg:#c9d6cf;
+  --warn-bg:#2b2614; --warn-line:#7a6531; --ok:#5fd39a; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px;margin:0}
+.wrap{max-width:1320px;margin:0 auto}
+header h1{font-size:30px;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:85ch}
+.grid{display:grid;grid-template-columns:310px minmax(0,1fr);gap:28px;margin-top:24px;align-items:start}
+@media (max-width:960px){.grid{grid-template-columns:minmax(0,1fr)}}
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px}
+@media (max-width:960px){aside{position:static;max-height:none}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.box summary{cursor:pointer;font-weight:700}
+.box h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+nav ol{margin:6px 0 0;padding-left:0;list-style:none;font-size:14.5px}
+nav a{display:flex;gap:8px;color:var(--fg);text-decoration:none;padding:3px 6px;border-radius:5px}
+nav a:hover,nav a:focus-visible{background:var(--accent-soft)}
+nav a span{font:500 12px/1.9 var(--f-mono);color:var(--accent);min-width:22px}
+label{display:block;font-size:13px;font-weight:600;margin:8px 0 2px}
+label small{font-weight:400;color:var(--muted)}
+input,select{width:100%;font:13.5px var(--f-mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.secret{border-style:dashed}
+.check{display:flex;gap:8px;align-items:center;font-weight:400;margin-top:10px}
+.check input{width:auto}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+main{min-width:0;display:flex;flex-direction:column;gap:22px}
+section.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;min-width:0;scroll-margin-top:12px}
+@media (max-width:600px){section.step{padding:16px}}
+.step h2{margin:0 0 4px;font-size:22px;line-height:1.25;display:flex;gap:12px;align-items:baseline;text-wrap:balance}
+.step h2 .n{font:500 13px var(--f-mono);color:var(--accent);background:var(--accent-soft);padding:2px 9px;border-radius:20px;white-space:nowrap}
+.step h3{font-size:16.5px;margin:22px 0 6px}
+.lead{color:var(--muted);margin:0 0 12px;max-width:85ch}
+p,li{max-width:85ch}
+.label{font:600 11.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+.cmd{position:relative;margin:6px 0 0}
+pre{margin:0;background:var(--code);color:var(--code-fg);font:13px/1.55 var(--f-mono);padding:14px 16px;border-radius:8px;overflow-x:auto;white-space:pre}
+pre.out{background:var(--out);color:var(--out-fg)}
+.copy{position:absolute;top:8px;right:8px;font:600 12px var(--f-body);padding:4px 10px;border-radius:6px;border:1px solid #3a4a43;background:#1c2723;color:#dbe7e1;cursor:pointer}
+.copy.done{background:var(--ok);border-color:var(--ok);color:#fff}
+code{font:13.5px var(--f-mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:10px 14px;margin:12px 0}
+.note p{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:8px 0}
+.tw{overflow-x:auto}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Kong Gateway 3.x to Kong AI Gateway 2.x: migration runbook</h1>
+  <p>Fill in your settings on the left; every command below updates as you type. You start with two gateways that
+  already run in Konnect: a Kong Gateway 3.x control plane with a data plane, and a Kong AI Gateway 2.x with a data
+  plane. Part 1 loads a typical AI configuration onto the 3.x gateway (OpenAI, Amazon Bedrock, Vertex AI; API keys;
+  token tiers). Part 2 migrates it to the 2.x gateway with <code>deck</code>, <code>kongctl convert ai-gateway</code>
+  and <code>kongctl</code>, and tests both side by side. Settings stay in your browser (secrets are never stored);
+  nothing is sent anywhere.</p>
+</header>
+
+<div class="grid">
+<aside>
+  <details class="box" id="settings" open>
+    <summary>Your settings</summary>
+    <h3>Konnect</h3>
+    <label for="region">Region</label>
+    <select id="region"><option>us</option><option>eu</option><option>au</option><option>me</option><option>in</option><option>sg</option></select>
+    <label for="pat">Personal access token <small>(not stored)</small></label>
+    <input id="pat" class="secret" type="password" placeholder="kpat_..." autocomplete="off">
+    <h3>Kong Gateway 3.x (existing)</h3>
+    <label for="srcCp">Control plane name</label>
+    <input id="srcCp" value="aigw-migration-316">
+    <label for="srcUrl">Proxy URL</label>
+    <input id="srcUrl" value="https://ai-316.example.com">
+    <h3>Kong AI Gateway 2.x (existing)</h3>
+    <label for="gwName">AI Gateway name</label>
+    <input id="gwName" value="aigw-migration-23">
+    <label for="gwDisplay">Display name <small>(as in Konnect)</small></label>
+    <input id="gwDisplay" value="AI Gateway 2.3">
+    <label for="minRuntime">Minimum runtime version</label>
+    <input id="minRuntime" value="2.3">
+    <label for="dstUrl">Proxy URL</label>
+    <input id="dstUrl" value="https://ai.example.com">
+    <label for="nsPrefix">kongctl namespace prefix</label>
+    <input id="nsPrefix" value="aigw-migration">
+    <h3>Providers</h3>
+    <label for="gcpProject">GCP project (Vertex AI)</label>
+    <input id="gcpProject" value="my-gcp-project">
+    <label for="gcpLocation">GCP location</label>
+    <input id="gcpLocation" value="us-central1">
+    <label for="gcpSaFile">Vertex service-account key file</label>
+    <input id="gcpSaFile" value="./secrets/gcp-sa.json">
+    <label for="rlaId">3.x rate-limit identifier</label>
+    <select id="rlaId"><option>consumer</option><option>credential</option><option>ip</option></select>
+    <h3>Folders</h3>
+    <label for="workdir">Working folder</label>
+    <input id="workdir" value="~/aigw-migration">
+    <label for="kitDir">This download (unzipped folder)</label>
+    <input id="kitDir" value="~/2026-11-migrating-to-kong-ai-gateway-2-0">
+    <label class="check"><input id="inline" type="checkbox"> Put the Konnect token into the commands</label>
+    <p class="hint">Off (default): commands use <code>$KONNECT_PAT</code>, set once in step 2.</p>
+  </details>
+  <nav class="box" aria-label="Steps">
+    <strong>Part 1: the 3.x starting point</strong>
+    <ol>
+      <li><a href="#s1"><span>1</span>Tools and gateways</a></li>
+      <li><a href="#s2"><span>2</span>Environment variables</a></li>
+      <li><a href="#s3"><span>3</span>Check access</a></li>
+      <li><a href="#s4"><span>4</span>Load the 3.x configuration</a></li>
+    </ol>
+    <strong>Part 2: migrate</strong>
+    <ol>
+      <li><a href="#s5"><span>5</span>Export the 3.x config</a></li>
+      <li><a href="#s6"><span>6</span>Converter input</a></li>
+      <li><a href="#s7"><span>7</span>Convert</a></li>
+      <li><a href="#s8"><span>8</span>Review and fix</a></li>
+      <li><a href="#s9"><span>9</span>Plan and apply</a></li>
+      <li><a href="#s10"><span>10</span>Test both gateways</a></li>
+      <li><a href="#s11"><span>11</span>Per-consumer budgets</a></li>
+      <li><a href="#s12"><span>12</span>Cut over</a></li>
+      <li><a href="#s13"><span>13</span>Clean up</a></li>
+    </ol>
+  </nav>
+</aside>
+
+<main>
+<section class="step" id="s1">
+  <h2><span class="n">Step 1</span>Tools and gateways</h2>
+  <p class="lead">kongctl with the converter extension, decK, yq (mikefarah v4), jq and openssl. Tested with kongctl
+  1.28.0, converter v0.6.0 and decK 1.70.0, Kong Gateway 3.16.0.2 and Kong AI Gateway 2.3.1.</p>
+  <div class="cmd"><pre data-t>brew install kong/kongctl/kongctl kong/deck/deck yq jq
+kongctl install extension Kong/kongctl-ext-aigw-converter --yes
+
+kongctl version
+kongctl convert ai-gateway version
+deck version
+gh release list -R Kong/kongctl-ext-aigw-converter -L 1   # optional (GitHub CLI): is there a newer converter?</pre></div>
+  <p class="label">Already running in Konnect</p>
+  <div class="tw"><table>
+    <tr><th>Gateway</th><th>What you need</th></tr>
+    <tr><td>Kong Gateway 3.x</td><td>a hybrid control plane (<code>«srcCp»</code>) with a connected data plane reachable at <code>«srcUrl»</code></td></tr>
+    <tr><td>Kong AI Gateway 2.x</td><td>an AI Gateway (<code>«gwName»</code>) with a connected data plane reachable at <code>«dstUrl»</code>; no configuration needed yet</td></tr>
+  </table></div>
+  <p>Both data planes need no extra settings: the provider credentials travel with the configuration.</p>
+  <p>No AI Gateway yet? Create one in Konnect, connect a data plane with the setup instructions Konnect shows, and use its name and proxy URL above. The 3.x side can be any hybrid control plane you can test on: the example only touches entities tagged <code>aigw-migration</code>.</p>
+  <p class="label">LLM provider credentials</p>
+  <div class="tw"><table>
+    <tr><th>Provider</th><th>What you need</th><th>Used by</th></tr>
+    <tr><td>OpenAI</td><td>an API key</td><td>routes <code>/openai/v1/*</code></td></tr>
+    <tr><td>Amazon Bedrock</td><td>a Bedrock API key (console: Bedrock &gt; API keys) with access to Claude Haiku 4.5 in us-east-1</td><td><code>/bedrock/v1/*</code>, <code>/anthropic/v1/messages</code></td></tr>
+    <tr><td>Google Vertex AI</td><td>a service-account JSON key with <code>roles/aiplatform.user</code></td><td><code>/vertex/v1/*</code>, <code>/gemini/...</code></td></tr>
+  </table></div>
+  <p class="hint">Missing a provider? Delete its service (<code>openai</code>, <code>bedrock</code> or <code>vertex</code>)
+  from <code>kong-316.yaml</code> in step 4; everything else works the same.</p>
+</section>
+
+<section class="step" id="s2">
+  <h2><span class="n">Step 2</span>Environment variables</h2>
+  <p class="lead">Run this once per terminal. kongctl reads the token and API address from
+  <code>KONGCTL_DEFAULT_KONNECT_*</code>; decK takes them as flags. decK also fills the provider credentials and the
+  application API keys into the configuration from <code>DECK_*</code> variables, and kongctl reads the same
+  variables during the migration. The API keys are generated once and kept in <code>secrets/app-keys.env</code>.</p>
+  <div class="cmd"><pre data-t>mkdir -p «workdir»/secrets && cd «workdir»
+export KONNECT_PAT='«patValue»'
+export KONNECT_ADDR=https://«region».api.konghq.com
+export KONGCTL_DEFAULT_KONNECT_PAT="$KONNECT_PAT"
+export KONGCTL_DEFAULT_KONNECT_BASE_URL="$KONNECT_ADDR"
+export SRC_CP='«srcCp»' TARGET_GW='«gwName»'
+export DECK_KONNECT=(--konnect-token "$KONNECT_PAT" --konnect-addr "$KONNECT_ADDR" --konnect-control-plane-name "$SRC_CP")
+
+# provider credentials (full header values; the Vertex key as one line of JSON)
+# "Bearer " followed by your OpenAI API key
+export DECK_OPENAI_AUTH='Bearer __REPLACE_ME__'
+# "Bearer " followed by your Amazon Bedrock API key
+export DECK_BEDROCK_AUTH='Bearer __REPLACE_ME__'
+export DECK_GCP_SA_JSON="$(jq -c . «gcpSaFile»)"
+export DECK_GCP_PROJECT='«gcpProject»' DECK_GCP_LOCATION='«gcpLocation»'
+
+# application API keys (generated once, reused on every run)
+[ -f secrets/app-keys.env ] || for a in APP_REPORTING APP_CHATBOT APP_BATCH APP_ETL; do
+  echo "export DECK_KEY_$a='key-$(openssl rand -hex 16)'"; done > secrets/app-keys.env
+chmod 600 secrets/app-keys.env && source secrets/app-keys.env</pre></div>
+  <p class="hint">Single quotes matter: a value with a space or <code>$</code> breaks an unquoted export. The
+  <code>DECK_KONNECT</code> array needs bash or zsh. A new terminal needs this step again.</p>
+</section>
+
+<section class="step" id="s3">
+  <h2><span class="n">Step 3</span>Check access</h2>
+  <div class="cmd"><pre data-t>deck gateway ping "${DECK_KONNECT[@]}"
+kongctl get ai-gateways -o json | jq -r '.[] | .name + "  (" + .display_name + ")"'
+kongctl get ai-gateway nodes --gateway-name "$TARGET_GW" -o json | jq -r '.[] | "\(.hostname) \(.version) \(.config_sync.state)"'</pre></div>
+  <p class="label">Expected</p>
+  <pre class="out" data-t>Successfully Konnected to the ... organization!
+«gwName»  («gwDisplay»)
+...   2.3.1   STATE_IN_SYNC</pre>
+</section>
+
+<section class="step" id="s4">
+  <h2><span class="n">Step 4</span>Load the 3.x configuration</h2>
+  <div class="lead">The example has 8 routes, each with its own <code>ai-proxy-advanced</code>:
+  <ul>
+    <li>OpenAI chat, responses and embeddings</li>
+    <li>Bedrock Claude in OpenAI format, and as native Anthropic Messages</li>
+    <li>Vertex Gemini in OpenAI format, embeddings, and native <code>generateContent</code></li>
+  </ul>
+  Global <code>key-auth</code>, and four consumers in tiers gold, silver and bronze with
+  <code>ai-rate-limiting-advanced</code>: 50,000, 5,000 and 300 tokens per minute per consumer. The tiers use the
+  <code>policies</code> format (Kong Gateway 3.14+): each rule matches one provider and the consumer, both with
+  <code>partition_by: true</code>, so every consumer has its own budget. Every entity carries
+  the tag <code>aigw-migration</code>, and the file selects on it, so <code>sync</code> only touches these entities and
+  leaves anything else on your control plane alone.</div>
+  <div class="cmd"><pre data-t>cp «kitDir»/config-examples/1-source-3x/kong-316.yaml .
+deck gateway validate "${DECK_KONNECT[@]}" kong-316.yaml
+deck gateway diff "${DECK_KONNECT[@]}" kong-316.yaml | grep -E '^(creating|deleting|updating)|Created|Updated|Deleted'
+deck gateway sync "${DECK_KONNECT[@]}" kong-316.yaml | tail -4</pre></div>
+  <p class="label">Expected</p>
+  <pre class="out">Summary:
+  Created: 38
+  Updated: 0
+  Deleted: 0</pre>
+  <h3>First calls (wait about 30 seconds for the data plane to sync)</h3>
+  <div class="cmd"><pre data-t>curl -s «srcUrl»/openai/v1/chat/completions -H "apikey: $DECK_KEY_APP_REPORTING" -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-5-mini","messages":[{"role":"user","content":"In one sentence: what is an AI gateway?"}]}' | jq -r '.choices[0].message.content'
+curl -s -o /dev/null -w '%{http_code}\n' «srcUrl»/openai/v1/chat/completions -H 'Content-Type: application/json' -d '{}'   # 401: no key</pre></div>
+</section>
+
+<section class="step" id="s5">
+  <h2><span class="n">Step 5</span>Export the 3.x configuration</h2>
+  <p class="lead">Part 2 starts here; with your own 3.x configuration, start here too. The dump is the converter's only
+  input, and it holds the API keys and provider credentials in clear text (that is how they migrate unchanged): treat
+  <code>01-dump/</code> as secret.</p>
+  <div class="cmd"><pre data-t>mkdir -p 01-dump
+deck gateway dump "${DECK_KONNECT[@]}" -o 01-dump/kong.yaml --yes
+chmod 600 01-dump/kong.yaml
+
+echo "services $(yq '.services | length' 01-dump/kong.yaml), routes $(yq '[.services[].routes[]] | length' 01-dump/kong.yaml), consumers $(yq '.consumers | length // 0' 01-dump/kong.yaml), consumer groups $(yq '.consumer_groups | length // 0' 01-dump/kong.yaml)"
+yq '[.services[].routes[].plugins[] | select(.name == "ai-proxy-advanced")] | length' 01-dump/kong.yaml   # AI routes
+yq -r '.plugins[] | .name' 01-dump/kong.yaml                                                                 # global plugins
+yq -o=json -I=0 '.plugins[] | select(.name == "key-auth") | .config.key_names' 01-dump/kong.yaml           # key names to keep</pre></div>
+  <p class="label">Expected (example config)</p>
+  <pre class="out">services 3, routes 8, consumers 4, consumer groups 3
+8
+key-auth
+["apikey","x-api-key","x-goog-api-key"]</pre>
+</section>
+
+<section class="step" id="s6">
+  <h2><span class="n">Step 6</span>Converter input</h2>
+  <div class="lead">Two files in <code>config/</code>, and the AI Gateway handed to kongctl:
+  <ul>
+    <li><code>gateway.yaml</code> describes your existing AI Gateway. Use the same name and display name it has in
+    Konnect.</li>
+    <li><code>auth_strategies.yaml</code> says how the global <code>key-auth</code> becomes a 2.x auth strategy. Global
+    plugins are not converted on their own, because 2.x authenticates per model. Use the key names from step 5, so
+    clients keep sending the same header.</li>
+  </ul></div>
+  <div class="cmd"><pre data-t>mkdir -p config
+cat > config/gateway.yaml <<'EOF'
+_defaults:
+  kongctl:
+    namespace: «nsPrefix»-23
+ai_gateways:
+  - ref: «gwName»
+    name: «gwName»
+    display_name: «gwDisplay»
+    description: Migrated from Kong Gateway 3.x control plane «srcCp»
+    min_runtime_version: "«minRuntime»"
+EOF
+
+cat > config/auth_strategies.yaml <<'EOF'
+# The global key-auth plugin becomes one auth strategy on every model.
+# Only ONE strategy may use models: ['*']; list model names (= 3.x route names) on any other.
+auth_strategies:
+  - ref: api-key
+    name: api-key
+    display_name: API key
+    type: key-auth
+    config:
+      key_names: [apikey, x-api-key, x-goog-api-key]
+      hide_credentials: true
+      key_in_header: true
+      key_in_query: true
+    models: ['*']
+EOF
+
+# hand the existing AI Gateway to kongctl (once; "already has namespace label" means it is done)
+kongctl adopt ai-gateway «gwName» --namespace «nsPrefix»-23</pre></div>
+  <div class="note"><p><strong>Using an identity provider instead of keys?</strong> Declare an
+  <code>openid-connect</code> strategy (issuer, <code>auth_methods: [bearer]</code>, <code>audience_required</code>,
+  <code>consumer_groups_claim</code>). The converter drops <code>bearer_token_param_type</code> and
+  <code>display_errors</code> (it validates against the 2.0 schema); add them back after converting. Konnect
+  rejects <code>anonymous</code> on a key-auth strategy.</p></div>
+</section>
+
+<section class="step" id="s7">
+  <h2><span class="n">Step 7</span>Convert</h2>
+  <div class="cmd"><pre data-t>kongctl convert ai-gateway --input 01-dump/kong.yaml --config config --out 02-converted --namespace-prefix «nsPrefix»
+ls 02-converted
+sed -n '/^| Route |/,/^$/p' 02-converted/migration-report.md                  # what clients must change
+grep '^| warn\|^| info' 02-converted/migration-report.md | cut -d'|' -f3-5     # findings</pre></div>
+  <p class="label">Expected (example config)</p>
+  <pre class="out">warn: [global-plugin-dropped] globally scoped key-auth authenticated every route on 1.x; ... list every migrated
+      entity under an auth strategy in config/auth_strategies.yaml
+warn: [credential-secret-scaffold] api key migrated as an environment reference (AIGW_APIKEY_APP_BATCH); without it the
+      gateway would generate a new key and every existing client would break — supply the value through the generated secrets.env
+...
+findings: 0 error(s), 6 warning(s), 1 note(s)
+migration complete: wrote output to 02-converted
+
+auth_strategies.yaml  consumer_groups.yaml  consumers.yaml  gateway.yaml  migration-report.json  migration-report.md
+models.yaml  policies.yaml  providers.yaml  secrets.env  secrets.env.template</pre>
+  <p>The client table lists each 3.x route, the path clients call after the migration, and the body
+  <code>model</code> they must send. In the example every path stays the same.</p>
+  <div class="note"><p><strong><code>02-converted/</code> is secret too.</strong> The converter copies provider
+  credentials from the dump into <code>providers.yaml</code> in clear text, and the API keys into
+  <code>secrets.env</code>. Keep the folder out of git and shared drives; step 8 produces a <code>03-final/</code>
+  without secrets.</p></div>
+</section>
+
+<section class="step" id="s8">
+  <h2><span class="n">Step 8</span>Review and fix</h2>
+  <p class="lead">Never edit <code>02-converted/</code>; work on a copy. The converter keeps every API key: the values
+  are in <code>secrets.env</code> (clear text), and the converted consumers reference them as
+  <code>!secret {source: !env AIGW_APIKEY_...}</code>.</p>
+  <div class="cmd"><pre data-t>rm -rf 03-final && cp -R 02-converted 03-final
+mv 03-final/secrets.env secrets/converted-keys.env && rm -f 03-final/secrets.env.template
+chmod 600 secrets/converted-keys.env
+set -a && source secrets/converted-keys.env && set +a      # AIGW_APIKEY_* for kongctl plan / apply</pre></div>
+
+  <h3>Check B: per-consumer rate-limit budgets</h3>
+  <p>A rule's counter is keyed by the rule and by the matches marked <code>partition_by: true</code>; nothing else
+  splits it. The example's tiers are already in the <code>policies</code> format with a consumer partition, and the
+  converter copies them 1:1, so there is nothing to fix. Check it:</p>
+  <div class="cmd"><pre data-t>yq -o=json -I=0 '.ai_gateway_policies[] | select(.type == "ai-rate-limiting-advanced") | {(.name): .config.policies[0].match}' 03-final/policies.yaml</pre></div>
+  <p class="label">Expected</p>
+  <pre class="out" data-t>{"ai-rate-limiting-advanced":[{"key":null,"partition_by":true,"type":"provider","values":["openai"]},{"key":null,"partition_by":true,"type":"«rlaId»","values":null}]}
+{"ai-rate-limiting-advanced-2":[...]}
+{"ai-rate-limiting-advanced-3":[...]}</pre>
+  <div class="note"><p><strong>Your own 3.x tiers still use the older <code>llm_providers</code> format?</strong> Then the
+  converted rules have no consumer partition, so a tier would share one budget. Best: rewrite the tiers on 3.x in the
+  <code>policies</code> format first (3.14+; see <code>config-examples/1-source-3x/kong-316.yaml</code>), test there,
+  then dump and convert. Or add the partitions on the converted copy:</p></div>
+  <div class="cmd"><pre data-t>yq -i '(.ai_gateway_policies[] | select(.type == "ai-rate-limiting-advanced") | .config.policies[].match) |=
+  (map(select(.type == "provider") |= . + {"partition_by": true}) + [{"type": "«rlaId»", "partition_by": true}])' 03-final/policies.yaml</pre></div>
+
+  <h3>Credentials: reference them instead of copying them</h3>
+  <p>The example's 3.x config holds the provider credentials inline, so the converter copies them into
+  <code>providers.yaml</code> as plain text. kongctl accepts write-only fields such as provider credentials only as
+  <code>!secret</code> or as a vault reference; with plain text, <code>kongctl plan</code> stops with
+  <code>field /config/auth/headers/0/value is write-only and requires !secret with a deferred source or a vault
+  reference</code>. This command points them at the <code>DECK_*</code> variables from step 2, and as a bonus no
+  file in <code>03-final/</code> holds a secret.</p>
+  <div class="note"><p><strong>Ideal: a vault.</strong> If your 3.x config already uses vault references (for example
+  <code>{vault://env/openai-auth}</code>, HashiCorp Vault, AWS Secrets Manager or a Konnect Config Store), the converter
+  keeps them unchanged and this step disappears; the 2.x data plane then needs the same vault backend as the 3.x
+  one. The example uses inline credentials so the gateways need no extra settings.</p></div>
+  <div class="cmd"><pre data-t>yq -i '
+  with(.ai_gateway_model_providers[] | select(.type == "openai") | .config.auth.headers[0].value; . = {"source": "DECK_OPENAI_AUTH"} | . tag = "!secret" | .source tag = "!env") |
+  with(.ai_gateway_model_providers[] | select(.type == "bedrock") | .config.auth.headers[0].value; . = {"source": "DECK_BEDROCK_AUTH"} | . tag = "!secret" | .source tag = "!env") |
+  with(.ai_gateway_model_providers[] | select(.type == "gemini") | .config.auth.service_account_json; . = {"source": "DECK_GCP_SA_JSON"} | . tag = "!secret" | .source tag = "!env")' 03-final/providers.yaml
+grep -nE 'value:|service_account_json|source:' 03-final/providers.yaml
+grep -rlE 'sk-|bedrock-api-key-|PRIVATE KEY' 03-final || echo "no secrets in 03-final"</pre></div>
+  <p class="label">Expected</p>
+  <pre class="out">14:            value: !secret
+15:              source: !env DECK_BEDROCK_AUTH
+26:            value: !secret
+27:              source: !env DECK_OPENAI_AUTH
+36:        service_account_json: !secret
+37:          source: !env DECK_GCP_SA_JSON
+no secrets in 03-final</pre>
+
+  <h3>Checks</h3>
+  <div class="tw"><table>
+    <tr><th>Check</th><th>Command or action</th></tr>
+    <tr><td>Every model has the 3.x model name as selector</td><td><code>yq -r '.ai_gateway_models[] | .name + " " + (.config.route.model.values | join(","))' 03-final/models.yaml</code></td></tr>
+    <tr><td>Every consumer kept its key</td><td><code>grep -c AIGW_APIKEY 03-final/consumers.yaml</code> = number of key-auth credentials in the dump</td></tr>
+    <tr><td>Load-balanced 3.x routes kept all targets</td><td>compare <code>yq '.ai_gateway_models[] | .targets | length' 03-final/models.yaml</code> with the targets per route in the dump</td></tr>
+    <tr><td>Native Gemini on Vertex</td><td>clients keep the Vertex path <code>/v1/projects/&lt;p&gt;/locations/&lt;l&gt;/publishers/google/models/&lt;m&gt;:generateContent</code>; the report's <code>v1beta/models/...</code> returns 404 on a Vertex target (on 3.x too)</td></tr>
+    <tr><td>Requests without <code>model</code></td><td>3.x used the route's pinned model; 2.x answers <code>503 name resolution failed</code>. Clients must send the <code>model</code> from the client table (step 7); there is no native default</td></tr>
+    <tr><td>Vault references (if your 3.x config uses <code>{vault://...}</code>)</td><td>they are kept unchanged; the 2.x data plane needs the same vault backend settings as the 3.x one</td></tr>
+    <tr><td><code>ssl_verify: false</code> anywhere</td><td>2.x data planes reject a config that disables TLS verification (the converter forces it on); install the CA instead</td></tr>
+  </table></div>
+</section>
+
+<section class="step" id="s9">
+  <h2><span class="n">Step 9</span>Plan and apply</h2>
+  <p class="lead"><code>--mode apply</code> creates and updates, never deletes. Never use <code>sync</code> against
+  namespaces other tools or teams share. The terminal needs the <code>DECK_*</code> variables from step 2 and the
+  <code>AIGW_APIKEY_*</code> variables from step 8.</p>
+  <div class="cmd"><pre data-t>kongctl plan --mode apply -f 03-final --output-file plan.json
+kongctl diff --plan plan.json | less
+kongctl apply --plan plan.json --auto-approve
+
+kongctl plan --mode apply -f 03-final --output-file plan.json   # must end with "No changes detected"</pre></div>
+  <p class="label">Expected (example config, first apply)</p>
+  <pre class="out">Plan: 26 to add, 1 to change, 7 secret write
+...
+Complete.
+Executed 27 changes.
+
+No changes detected. Konnect is up to date.</pre>
+  <div class="note"><p><strong>A plan doesn't prove the config works.</strong> Konnect rejects some values only at
+  apply, and some problems only show on the data plane: one entity the data plane refuses makes it drop the whole
+  configuration. Always send traffic (step 10).</p>
+  <p>Provider credentials and API keys are write-only, so a later plan cannot see when they change. After rotating
+  one, update it in Konnect. Also, kongctl does not see an element <em>removed</em> from a policy's
+  <code>match</code> list; after such a change, compare with
+  <code>kongctl get ai-gateway policies --gateway-name «gwName» -o json</code>.</p></div>
+  <div class="cmd"><pre data-t>kongctl get ai-gateway nodes --gateway-name "$TARGET_GW" -o json | jq -r '.[] | "\(.hostname) \(.version) \(.config_sync.state)"'</pre></div>
+</section>
+
+<section class="step" id="s10">
+  <h2><span class="n">Step 10</span>Test both gateways</h2>
+  <p class="lead">Send the same requests with the same API key to 3.x and 2.x. <code>smoke-test.sh</code> is in the kit
+  folder. 2.x-style requests (capability path plus body <code>model</code>) also work on 3.x, so the results compare
+  directly.</p>
+  <div class="cmd"><pre data-t>export GCP_PROJECT="$DECK_GCP_PROJECT" GCP_LOCATION="$DECK_GCP_LOCATION"
+BASE_URL=«srcUrl» API_KEY="$DECK_KEY_APP_REPORTING" «kitDir»/smoke-test.sh
+BASE_URL=«dstUrl» API_KEY="$DECK_KEY_APP_REPORTING" «kitDir»/smoke-test.sh</pre></div>
+  <p class="label">Expected (both)</p>
+  <pre class="out">PASS no key -> 401 (401)
+PASS OpenAI chat (200)
+PASS OpenAI responses (200)
+PASS OpenAI embeddings (200)
+PASS Bedrock Claude, OpenAI format (200)
+PASS Anthropic Messages (x-api-key) (200)
+PASS Vertex Gemini, OpenAI format (200)
+PASS Vertex embeddings (200)
+PASS Gemini native (x-goog-api-key) (200)
+== 9 passed, 0 failed</pre>
+  <h3>One call by hand, with the rate-limit headers</h3>
+  <div class="cmd"><pre data-t>for u in «srcUrl» «dstUrl»; do echo "== $u"
+  curl -s -D - -o /dev/null $u/anthropic/v1/messages -H "x-api-key: $DECK_KEY_APP_CHATBOT" -H 'anthropic-version: 2023-06-01' \
+    -H 'Content-Type: application/json' -d '{"model":"us.anthropic.claude-haiku-4-5-20251001-v1:0","max_tokens":40,"messages":[{"role":"user","content":"Hi"}]}' \
+    | grep -iE '^(HTTP|x-kong-llm-model|x-ai-ratelimit-(limit|remaining)-minute-(bedrock|policy))'
+done</pre></div>
+  <p class="label">Expected</p>
+  <pre class="out" data-t>== «srcUrl»
+HTTP/2 200
+x-ai-ratelimit-limit-minute-policy-2: 5000
+x-ai-ratelimit-remaining-minute-policy-2: 5000
+x-kong-llm-model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+== «dstUrl»
+HTTP/2 200
+x-ai-ratelimit-limit-minute-policy-2: 5000
+x-ai-ratelimit-remaining-minute-policy-2: 4998
+x-kong-llm-model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0</pre>
+</section>
+
+<section class="step" id="s11">
+  <h2><span class="n">Step 11</span>Check per-consumer budgets</h2>
+  <div class="lead">Status codes alone don't prove the tiers behave as before. <code>app-batch</code> and
+  <code>app-etl</code> are both bronze, with 300 tokens per minute each. Use up app-batch's budget, then call once as
+  app-etl:
+  <ul>
+    <li>Per-consumer budgets: app-etl gets 200.</li>
+    <li>One shared budget (no consumer partition, see step 8): app-etl gets 429.</li>
+  </ul>
+  Wait 60 seconds after other tests first.</div>
+  <div class="cmd"><pre data-t>for u in «srcUrl» «dstUrl»; do echo "== $u"
+  for i in $(seq 1 12); do
+    c=$(curl -s -o /dev/null -w '%{http_code}' $u/openai/v1/chat/completions -H "apikey: $DECK_KEY_APP_BATCH" \
+          -H 'Content-Type: application/json' -d '{"model":"gpt-5-mini","messages":[{"role":"user","content":"In three sentences, explain what an API gateway does."}]}')
+    echo "app-batch $c"; [ "$c" = 429 ] && break
+  done
+  curl -s -o /dev/null -w 'app-etl %{http_code}\n' $u/openai/v1/chat/completions -H "apikey: $DECK_KEY_APP_ETL" \
+    -H 'Content-Type: application/json' -d '{"model":"gpt-5-mini","messages":[{"role":"user","content":"Reply OK"}]}'
+done</pre></div>
+  <p class="label">Expected (both)</p>
+  <pre class="out">app-batch 200
+app-batch 200
+app-batch 429
+app-etl 200      # 429 here = the tier shares one budget: add the consumer partition (step 8), plan and apply again</pre>
+</section>
+
+<section class="step" id="s12">
+  <h2><span class="n">Step 12</span>Cut over</h2>
+  <ol>
+    <li>Re-plan: <code>kongctl plan --mode apply -f 03-final --output-file plan.json</code> must say "No changes detected".</li>
+    <li>Tell client owners what changes: the client table from step 7, and the rate-limit header names.</li>
+    <li>Freeze changes on the 3.x control plane, or re-run steps 5 to 9 just before the switch.</li>
+    <li>Move traffic: DNS or load balancer from <code>«srcUrl»</code> to <code>«dstUrl»</code>; keep 3.x running.</li>
+    <li>Watch errors and token usage on both in Konnect analytics; rate-limit counters start fresh on 2.x.</li>
+    <li>Rollback = point traffic back to the 3.x proxy; nothing on 3.x was changed.</li>
+  </ol>
+</section>
+
+<section class="step" id="s13">
+  <h2><span class="n">Step 13</span>Clean up (test runs only)</h2>
+  <p class="lead">These commands remove what this runbook created, but leave both gateways and their data planes in
+  place. Don't use <code>kongctl delete -f 03-final</code>: that folder contains <code>gateway.yaml</code>, so it would
+  delete the AI Gateway itself.</p>
+  <div class="cmd"><pre data-t># 3.x: everything tagged aigw-migration
+deck gateway reset "${DECK_KONNECT[@]}" --select-tag aigw-migration --force
+
+# 2.x: the migrated entities (models first, providers last)
+GW_ID=$(kongctl get ai-gateways -o json | jq -r --arg n "$TARGET_GW" '.[] | select(.name == $n) | .id')
+for k in models consumer-groups consumers policies auth-strategies model-providers; do
+  for id in $(curl -s -H "Authorization: Bearer $KONNECT_PAT" "$KONNECT_ADDR/v1/ai-gateways/$GW_ID/$k?page%5Bsize%5D=100" | jq -r '.data[].id'); do
+    curl -s -o /dev/null -X DELETE -H "Authorization: Bearer $KONNECT_PAT" "$KONNECT_ADDR/v1/ai-gateways/$GW_ID/$k/$id"
+  done; echo "$k removed"
+done</pre></div>
+  <p class="hint">The 2.x loop removes <em>every</em> model, provider, policy, consumer group, consumer and auth
+  strategy on that AI Gateway. Use it only on a gateway dedicated to this exercise.</p>
+</section>
+
+<section class="step">
+  <h2>References</h2>
+  <ul>
+    <li><a href="https://developer.konghq.com/ai-gateway/v2-migration-guide/">Migrate to AI Gateway 2.x</a> (official migration guide)</li>
+    <li><a href="https://developer.konghq.com/ai-gateway/ai-gateway-v2-concepts/">AI Gateway 2.x concepts</a> (v1 to v2 entity mapping)</li>
+    <li><a href="https://github.com/Kong/kongctl-ext-aigw-converter">kongctl-ext-aigw-converter</a> (releases, issues)</li>
+    <li><a href="https://developer.konghq.com/kongctl/">kongctl docs</a> and <a href="https://github.com/Kong/kongctl">GitHub</a></li>
+    <li><a href="https://developer.konghq.com/deck/">decK docs</a> and <a href="https://github.com/Kong/deck">GitHub</a></li>
+  </ul>
+  <p>Example configuration for every stage of this runbook: <code>config-examples/</code> in the kit folder.</p>
+</section>
+</main>
+</div>
+</div>
+
+<script>
+const ids=["region","pat","srcCp","srcUrl","gwName","gwDisplay","minRuntime","dstUrl","nsPrefix",
+  "gcpProject","gcpLocation","gcpSaFile","rlaId","workdir","kitDir","inline"];
+const secretIds=["pat"];
+const KEY="aigw2-migration-runbook-v3";
+const $=id=>document.getElementById(id);
+const v=id=>{const e=$(id);return e.type==="checkbox"?e.checked:e.value.trim()};
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"{}");ids.forEach(i=>{if(secretIds.includes(i)||!(i in s))return;const e=$(i);if(e.type==="checkbox")e.checked=s[i];else e.value=s[i]})}catch(e){}}
+function save(){try{const s={};ids.forEach(i=>{if(!secretIds.includes(i))s[i]=v(i)});localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+// every text node with a «placeholder» (code blocks, tables, lists, notes) is a template
+const tpls=[];
+{const w=document.createTreeWalker(document.querySelector("main"),NodeFilter.SHOW_TEXT);
+ let n;while((n=w.nextNode())){if(/«\w+»/.test(n.nodeValue))tpls.push({el:n,t:n.nodeValue})}}
+function vars(){
+  const x={};ids.forEach(i=>x[i]=v(i));
+  x.patValue=x.inline&&x.pat?x.pat:"<your Konnect personal access token>";
+  x.srcUrl=x.srcUrl.replace(/\/$/,""); x.dstUrl=x.dstUrl.replace(/\/$/,"");
+  return x;
+}
+function render(){const x=vars();tpls.forEach(({el,t})=>{el.nodeValue=t.replace(/«(\w+)»/g,(m,k)=>k in x?x[k]:m)});save()}
+document.querySelectorAll(".cmd").forEach(c=>{
+  const b=document.createElement("button");b.type="button";b.className="copy";b.textContent="Copy";
+  b.addEventListener("click",()=>{
+    const pre=c.querySelector("pre");const text=pre.textContent;
+    const ok=()=>{b.textContent="Copied";b.classList.add("done");setTimeout(()=>{b.textContent="Copy";b.classList.remove("done")},1400)};
+    const sel=()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,sel)}else sel();
+  });
+  c.appendChild(b);
+});
+load();
+ids.forEach(i=>{$(i).addEventListener("input",render);$(i).addEventListener("change",render)});
+render();
+</script>

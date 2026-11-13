@@ -1,0 +1,29 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-consumer-groups
+ai_gateway_consumer_groups:
+  - ref: bronze
+    display_name: bronze
+    name: bronze
+    policies:
+      - ai-rate-limiting-advanced
+    consumers:
+      - app-batch
+      - app-etl
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: gold
+    display_name: gold
+    name: gold
+    policies:
+      - ai-rate-limiting-advanced-2
+    consumers:
+      - app-reporting
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: silver
+    display_name: silver
+    name: silver
+    policies:
+      - ai-rate-limiting-advanced-3
+    consumers:
+      - app-chatbot
+    ai_gateway: !ref aigw-migration-23#id

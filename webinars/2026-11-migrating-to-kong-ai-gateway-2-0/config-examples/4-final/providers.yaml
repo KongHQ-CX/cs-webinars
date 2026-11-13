@@ -1,0 +1,38 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-model-providers
+ai_gateway_model_providers:
+  - ref: bedrock-1
+    type: bedrock
+    display_name: bedrock-1
+    name: bedrock-1
+    config:
+      auth:
+        type: basic
+        headers:
+          - name: Authorization
+            value: !secret
+              source: !env DECK_BEDROCK_AUTH
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: openai-1
+    type: openai
+    display_name: openai-1
+    name: openai-1
+    config:
+      auth:
+        type: basic
+        headers:
+          - name: Authorization
+            value: !secret
+              source: !env DECK_OPENAI_AUTH
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: gemini-1
+    type: gemini
+    display_name: gemini-1
+    name: gemini-1
+    config:
+      auth:
+        type: gcp
+        service_account_json: !secret
+          source: !env DECK_GCP_SA_JSON
+    ai_gateway: !ref aigw-migration-23#id
