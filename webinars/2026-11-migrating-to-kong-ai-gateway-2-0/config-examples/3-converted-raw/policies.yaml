@@ -1,0 +1,301 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-policies
+ai_gateway_policies:
+  - ref: ai-rate-limiting-advanced
+    type: ai-rate-limiting-advanced
+    display_name: ai-rate-limiting-advanced
+    name: ai-rate-limiting-advanced
+    config:
+      custom_cost_count_function: null
+      decrease_by_fractions_in_redis: false
+      dictionary_name: kong_rate_limiting_counters
+      disable_penalty: false
+      error_code: 429
+      error_hide_providers: false
+      error_message: 'Bronze tier: AI token budget per minute used up. Ask the AI platform team for an upgrade.'
+      header_name: null
+      hide_client_headers: false
+      identifier: consumer
+      namespace: null
+      path: null
+      policies:
+        - id: null
+          limits:
+            - limit: 300
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - openai
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 300
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - bedrock
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 300
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - gemini
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+      redis:
+        cloud_authentication: null
+        cluster_addresses: null
+        cluster_max_redirections: 5
+        cluster_nodes: null
+        connect_timeout: 2000
+        connection_is_proxied: false
+        database: 0
+        host: 127.0.0.1
+        keepalive_backlog: null
+        keepalive_pool_size: 256
+        password: null
+        port: 6379
+        read_timeout: 2000
+        send_timeout: 2000
+        sentinel_addresses: null
+        sentinel_master: null
+        sentinel_nodes: null
+        sentinel_password: null
+        sentinel_role: null
+        sentinel_username: null
+        server_name: null
+        ssl: false
+        ssl_verify: true
+        timeout: 2000
+        username: null
+      request_prompt_count_function: null
+      retry_after_jitter_max: 0
+      strategy: local
+      sync_rate: null
+      tokens_count_strategy: total_tokens
+      window_type: sliding
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: ai-rate-limiting-advanced-2
+    type: ai-rate-limiting-advanced
+    display_name: ai-rate-limiting-advanced-2
+    name: ai-rate-limiting-advanced-2
+    config:
+      custom_cost_count_function: null
+      decrease_by_fractions_in_redis: false
+      dictionary_name: kong_rate_limiting_counters
+      disable_penalty: false
+      error_code: 429
+      error_hide_providers: false
+      error_message: 'Gold tier: AI token budget per minute used up.'
+      header_name: null
+      hide_client_headers: false
+      identifier: consumer
+      namespace: null
+      path: null
+      policies:
+        - id: null
+          limits:
+            - limit: 50000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - openai
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 50000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - bedrock
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 50000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - gemini
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+      redis:
+        cloud_authentication: null
+        cluster_addresses: null
+        cluster_max_redirections: 5
+        cluster_nodes: null
+        connect_timeout: 2000
+        connection_is_proxied: false
+        database: 0
+        host: 127.0.0.1
+        keepalive_backlog: null
+        keepalive_pool_size: 256
+        password: null
+        port: 6379
+        read_timeout: 2000
+        send_timeout: 2000
+        sentinel_addresses: null
+        sentinel_master: null
+        sentinel_nodes: null
+        sentinel_password: null
+        sentinel_role: null
+        sentinel_username: null
+        server_name: null
+        ssl: false
+        ssl_verify: true
+        timeout: 2000
+        username: null
+      request_prompt_count_function: null
+      retry_after_jitter_max: 0
+      strategy: local
+      sync_rate: null
+      tokens_count_strategy: total_tokens
+      window_type: sliding
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: ai-rate-limiting-advanced-3
+    type: ai-rate-limiting-advanced
+    display_name: ai-rate-limiting-advanced-3
+    name: ai-rate-limiting-advanced-3
+    config:
+      custom_cost_count_function: null
+      decrease_by_fractions_in_redis: false
+      dictionary_name: kong_rate_limiting_counters
+      disable_penalty: false
+      error_code: 429
+      error_hide_providers: false
+      error_message: 'Silver tier: AI token budget per minute used up.'
+      header_name: null
+      hide_client_headers: false
+      identifier: consumer
+      namespace: null
+      path: null
+      policies:
+        - id: null
+          limits:
+            - limit: 5000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - openai
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 5000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - bedrock
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+        - id: null
+          limits:
+            - limit: 5000
+              tokens_count_strategy: total_tokens
+              window_size: 60
+          match:
+            - key: null
+              partition_by: true
+              type: provider
+              values:
+                - gemini
+            - key: null
+              partition_by: true
+              type: consumer
+              values: null
+          window_type: sliding
+      redis:
+        cloud_authentication: null
+        cluster_addresses: null
+        cluster_max_redirections: 5
+        cluster_nodes: null
+        connect_timeout: 2000
+        connection_is_proxied: false
+        database: 0
+        host: 127.0.0.1
+        keepalive_backlog: null
+        keepalive_pool_size: 256
+        password: null
+        port: 6379
+        read_timeout: 2000
+        send_timeout: 2000
+        sentinel_addresses: null
+        sentinel_master: null
+        sentinel_nodes: null
+        sentinel_password: null
+        sentinel_role: null
+        sentinel_username: null
+        server_name: null
+        ssl: false
+        ssl_verify: true
+        timeout: 2000
+        username: null
+      request_prompt_count_function: null
+      retry_after_jitter_max: 0
+      strategy: local
+      sync_rate: null
+      tokens_count_strategy: total_tokens
+      window_type: sliding
+    ai_gateway: !ref aigw-migration-23#id

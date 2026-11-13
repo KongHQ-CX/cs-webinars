@@ -1,0 +1,56 @@
+_defaults:
+  kongctl:
+    namespace: aigw-migration-consumers
+ai_gateway_consumers:
+  - ref: app-batch
+    display_name: app-batch
+    name: app-batch
+    type: api-key
+    custom_id: app-batch
+    credentials:
+      - ref: app-batch-credential-1
+        display_name: app-batch-credential-1
+        name: app-batch-credential-1
+        type: api-key
+        api_key: !secret
+          source: !env AIGW_APIKEY_APP_BATCH
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: app-chatbot
+    display_name: app-chatbot
+    name: app-chatbot
+    type: api-key
+    custom_id: app-chatbot
+    credentials:
+      - ref: app-chatbot-credential-1
+        display_name: app-chatbot-credential-1
+        name: app-chatbot-credential-1
+        type: api-key
+        api_key: !secret
+          source: !env AIGW_APIKEY_APP_CHATBOT
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: app-etl
+    display_name: app-etl
+    name: app-etl
+    type: api-key
+    custom_id: app-etl
+    credentials:
+      - ref: app-etl-credential-1
+        display_name: app-etl-credential-1
+        name: app-etl-credential-1
+        type: api-key
+        api_key: !secret
+          source: !env AIGW_APIKEY_APP_ETL
+    ai_gateway: !ref aigw-migration-23#id
+  - ref: app-reporting
+    display_name: app-reporting
+    name: app-reporting
+    type: api-key
+    custom_id: app-reporting
+    credentials:
+      - ref: app-reporting-credential-1
+        display_name: app-reporting-credential-1
+        name: app-reporting-credential-1
+        type: api-key
+        api_key: !secret
+          source: !env AIGW_APIKEY_APP_REPORTING
+    ai_gateway: !ref aigw-migration-23#id
