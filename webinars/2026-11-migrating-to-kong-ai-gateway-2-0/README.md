@@ -4,7 +4,7 @@ This folder holds everything the webinar used. With it you can repeat the live m
 organization: load a typical AI configuration onto a Kong Gateway 3.x control plane, migrate it to Kong AI Gateway
 2.x with the official converter, and send the same requests to both gateways. Nothing here needs another repository.
 
-[Watch the recording](https://konghq.wistia.com/s/0ekogvuxqtbwsj5) (44 min) · [Event page](https://konghq.com/events/webinars/migrating-to-kong-ai-gateway-2-0)
+[Watch the recording](https://konghq.com/events/webinars/migrating-to-kong-ai-gateway-2-0)
 
 ## What is in the download
 
@@ -18,7 +18,7 @@ organization: load a typical AI configuration onto a Kong Gateway 3.x control pl
 | `config-examples/3-converted-raw/` | What `kongctl convert ai-gateway` writes for the example, with `migration-report.md` (credentials shown as `__REPLACE_ME__`) |
 | `config-examples/4-final/` | What gets applied: the converter output with the credentials as `!secret` references |
 | `config-examples/5-api-keys/README.md` | The applications, their tiers and how the keys migrate |
-| `Migrating-to-Kong-AI-Gateway-2.0-Webinar.pdf` | The slide deck from the session. [Watch the recording](https://konghq.wistia.com/s/0ekogvuxqtbwsj5) |
+| `Migrating-to-Kong-AI-Gateway-2.0-Webinar.pdf` | The slide deck from the session. [Watch the recording](https://konghq.com/events/webinars/migrating-to-kong-ai-gateway-2-0) |
 | `Migrating-to-Kong-AI-Gateway-2.0-Webinar.html` | The same deck as a page, with clickable references (arrow keys to move, N for notes) |
 
 ## What you need
